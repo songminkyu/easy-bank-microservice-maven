@@ -1,0 +1,23 @@
+{{- if and .Values.serviceAccount.create .Values.rbac.create }}
+kind: Role
+apiVersion: {{ include "spring-cloud-kubernetes-discoveryserver.capabilities.rbac.apiVersion" . }}
+metadata:
+  name: {{ template "spring-cloud-kubernetes-discoveryserver.fullname" . }}
+  namespace: {{ include "spring-cloud-kubernetes-discoveryserver.namespace" . | quote }}
+  labels: {{- include "spring-cloud-kubernetes-discoveryserver.labels" ( dict "customLabels" .Values.commonLabels "context" $ ) | nindent 4 }}
+    app.kubernetes.io/component: spring-cloud-kubernetes-discoveryserver
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "spring-cloud-kubernetes-discoveryserver.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+rules:
+  {{- if .Values.rbac.rules }}
+  {{- include "spring-cloud-kubernetes-discoveryserver.tplvalues.render" ( dict "value" .Values.rbac.rules "context" $ ) | nindent 2 }}
+  {{- end }}
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+{{- end }}

@@ -1,0 +1,2 @@
+loan_id;created_at;created_by;updated_at;updated_by;mobile_number;loan_number;loan_type;total_loan;amount_paid;outstanding_amount
+1;2023-11-07 06:00:33.447303;system;;;4354437687;100312330772;Home Loan;100000;0;100000

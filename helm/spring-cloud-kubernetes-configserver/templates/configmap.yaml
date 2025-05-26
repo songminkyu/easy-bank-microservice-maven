@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "spring-cloud-kubernetes-configserver.fullname" . | quote }}
+  namespace: {{ include "spring-cloud-kubernetes-configserver.namespace" . | quote }}
+  labels: {{- include "spring-cloud-kubernetes-configserver.labels" ( dict "customLabels" .Values.commonLabels "context" $ ) | nindent 4 }}
+    app.kubernetes.io/component: spring-cloud-kubernetes-configserver
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "spring-cloud-kubernetes-configserver.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+data:
+  SPRING_APPLICATION_NAME: {{ include "spring-cloud-kubernetes-configserver.fullname" . | quote }}
+  SPRING_PROFILES_INCLUDE: {{ .Values.spring.profiles.include | quote }}
+  ENCRYPT_KEY: {{ .Values.encrypt.key | quote }}

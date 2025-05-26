@@ -1,0 +1,2 @@
+card_id;created_at;created_by;updated_at;updated_by;mobile_number;card_number;card_type;total_limit;amount_used;available_amount
+1;2023-11-07 05:46:06.639469;system;;;4354437687;100675484265;Credit Card;100000;0;100000

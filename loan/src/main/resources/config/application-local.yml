@@ -1,0 +1,101 @@
+server:
+  port: 8090
+spring:
+  datasource:
+    url: jdbc:h2:mem:loandb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;
+    username: easybank
+    password: root
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 1
+      pool-name: Hikari
+      auto-commit: false
+  h2:
+    console:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  liquibase:
+    contexts: local, faker
+  kafka:
+    bootstrap-servers: http://localhost:9092
+  cloud:
+    kubernetes:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+    config:
+      enabled: false
+  logging:
+    loki:
+      enabled: false
+      url: http://localhost:3100/loki/api/v1/push
+  cache:
+    redisson:
+      regions:
+        entry.expiration.max_entries: 10000
+        entry.expiration.time-to-live: 3600000
+        entry.expiration.max_idle_time: 1800000
+  mvc:
+    problemdetails:
+      enabled: true
+  task:
+    execution:
+      thread-name-prefix: account-task-
+      pool:
+        core-size: 2
+        max-size: 50
+        queue-capacity: 10000
+    scheduling:
+      pool:
+        size: 2
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:7080/realms/eazybank/protocol/openid-connect/certs
+
+eureka:
+  instance:
+    preferIpAddress: true
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: http://easybank:root@localhost:8070/eureka/
+
+logging:
+  level:
+    ROOT: DEBUG
+    org.hibernate.SQL: DEBUG
+    io.github.susimsek.loan: DEBUG
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
+
+
+build:
+  version: "3.0"
+
+loan:
+  message: "Welcome to EazyBank loan related local APIs "
+  contactDetails:
+    name: "Amaal Grega - Developer"
+    email: "amaal@eazybank.com"
+  onCallSupport:
+    - (452) 456-2176
+    - (546) 764-8934
+
+springdoc:
+  oAuthFlow:
+    tokenUrl: http://localhost:7080/realms/eazybank/protocol/openid-connect/token
+
+management:
+  tracing:
+    enabled: false

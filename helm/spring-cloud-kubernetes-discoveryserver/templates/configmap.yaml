@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "spring-cloud-kubernetes-discoveryserver.fullname" . | quote }}
+  namespace: {{ include "spring-cloud-kubernetes-discoveryserver.namespace" . | quote }}
+  labels: {{- include "spring-cloud-kubernetes-discoveryserver.labels" ( dict "customLabels" .Values.commonLabels "context" $ ) | nindent 4 }}
+    app.kubernetes.io/component: spring-cloud-kubernetes-discoveryserver
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "spring-cloud-kubernetes-discoveryserver.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+data:
+  SPRING_APPLICATION_NAME: {{ include "spring-cloud-kubernetes-discoveryserver.fullname" . | quote }}

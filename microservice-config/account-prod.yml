@@ -1,0 +1,81 @@
+server:
+  shutdown: graceful
+
+build:
+  version: "1.0"
+
+account:
+  message: "Welcome to EazyBank account related production APIs "
+  contactDetails:
+    name: "Reine Aishwarya - Product Owner"
+    email: "{cipher}acfc59b7eb19990a084cf8e17024511670254f67d8b765bd2fda3538f85db0cf81a698183045520fd5e381e1d4efea66"
+  onCallSupport:
+    - (453) 392-4829
+    - (236) 203-0384
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  output:
+    ansi:
+      enabled: always
+  devtools:
+    restart:
+      enabled: false
+    livereload:
+      enabled: false
+  liquibase:
+    contexts: prod
+  logging:
+    loki:
+      enabled: true
+  cache:
+    redisson:
+      regions:
+        entry.expiration.max_entries: 10000
+        entry.expiration.time-to-live: 3600000
+        entry.expiration.max_idle_time: 1800000
+  security:
+    oauth2:
+      client:
+        registration:
+          eazybank-client:
+            provider: keycloak
+            client-id: eazybank-callcenter
+            client-secret: MS39GUVz3NDaIfY5aBM3U9kw4Kw6MvsF
+            authorization-grant-type: client_credentials
+            scope: openid, profile, email
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    readiness-state:
+      enabled: true
+    liveness-state:
+      enabled: true
+  endpoint:
+    shutdown:
+      enabled: true
+    health:
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+    enabled: true
+  observations:
+    key-values:
+      application: ${spring.application.name}
+
+logging:
+  level:
+    ROOT: INFO
+    io.github.susimsek.account: INFO
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'

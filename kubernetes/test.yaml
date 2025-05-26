@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test
+data:
+  application.yml: |-
+    greeting:
+      message: Say Hello to the World
+    farewell:
+      message: Say Goodbye default
+    email: "{cipher}acfc59b7eb19990a084cf8e17024511670254f67d8b765bd2fda3538f85db0cf81a698183045520fd5e381e1d4efea66"

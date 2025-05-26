@@ -1,0 +1,47 @@
+config-server:
+  enabled: true
+  fullnameOverride: config-server
+
+eureka-server:
+  enabled: false
+  fullnameOverride: eureka-server
+  spring:
+    profiles:
+      active: qa, k8s
+
+gateway-server:
+  enabled: true
+  fullnameOverride: gateway-server
+  spring:
+    profiles:
+      active: qa, k8s
+
+account:
+  fullnameOverride: account
+  spring:
+    profiles:
+      active: qa, k8s
+    liquibase:
+      contexts: qa
+
+loan:
+  fullnameOverride: loan
+  spring:
+    profiles:
+      active: qa, k8s
+    liquibase:
+      contexts: qa
+
+card:
+  fullnameOverride: card
+  spring:
+    profiles:
+      active: qa, k8s
+    liquibase:
+      contexts: qa
+
+message:
+  fullnameOverride: message
+  spring:
+    profiles:
+      active: qa, k8s

@@ -1,0 +1,66 @@
+server:
+  port: 8071
+
+spring:
+  application:
+    name: config-server
+  main:
+    allow-bean-definition-overriding: true
+  output:
+    ansi:
+      enabled: always
+  profiles:
+    # active: native
+    active: git
+  cloud:
+    config:
+      server:
+        # native:
+          # search-locations: classpath:central-server-config
+       git:
+         uri: https://github.com/susimsek/microservice-config.git
+         default-label: main
+         timeout: 5
+         clone-on-start: true
+         force-pull: true
+  kafka:
+    bootstrap-servers: http://localhost:9092
+  security:
+    user:
+      name: easybank
+      password: root
+      roles: USER, ADMIN
+    content-security-policy: "script-src 'self'"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    readiness-state:
+      enabled: true
+    liveness-state:
+      enabled: true
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+    enabled: false
+  observations:
+    key-values:
+      application: ${spring.application.name}
+
+
+encrypt:
+  key: 45D81EC1EF61DF9AD8D3E5BB397F9
+
+logging:
+  level:
+    ROOT: INFO
+    io.github.susimsek.configserver: INFO
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'

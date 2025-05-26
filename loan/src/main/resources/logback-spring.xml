@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true">
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+    <springProperty name="pattern" source="logging.pattern.level" />
+    <springProperty name="log.level" source="logging.level.root" defaultValue="INFO" />
+
+    <logger name="org.apache" level="WARN"/>
+    <logger name="org.hibernate" level="WARN"/>
+    <logger name="org.postgresql" level="WARN"/>
+    <logger name="org.redisson" level="WARN" />
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="org.springframework.web" level="WARN"/>
+    <logger name="org.springframework.cache" level="WARN"/>
+    <logger name="liquibase" level="WARN"/>
+    <logger name="io.netty" level="WARN"/>
+    <logger name="com.netflix" level="WARN"/>
+    <logger name="com.netflix.discovery" level="INFO"/>
+    <logger name="io.swagger.v3" level="INFO"/>
+
+    <root level="${log.level}">
+        <appender-ref ref="CONSOLE" />
+    </root>
+</configuration>

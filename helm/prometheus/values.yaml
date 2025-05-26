@@ -1,0 +1,61 @@
+prometheus:
+  additionalScrapeConfigs:
+    enabled: true
+    type: internal
+    internal:
+      jobList: [
+        {
+          "job_name": "config-server",
+          "metrics_path": "/actuator/prometheus",
+          "static_configs": [
+            {
+              "targets": [ "config-server:8071" ]
+            }
+          ]
+        },
+        {
+          "job_name": "eureka-server",
+          "metrics_path": "/actuator/prometheus",
+          "static_configs": [
+            {
+              "targets": [ "eureka-server:8070" ]
+            }
+          ]
+        },
+        {
+          "job_name": "account",
+          "metrics_path": "/actuator/prometheus",
+          "static_configs": [
+            {
+              "targets": [ "account:8080" ]
+            }
+          ]
+        },
+        {
+          "job_name": "loan",
+          "metrics_path": "/actuator/prometheus",
+          "static_configs": [
+            {
+              "targets": [ "loan:8090" ]
+            }
+          ]
+        },
+        {
+          "job_name": "card",
+          "metrics_path": "/actuator/prometheus",
+          "static_configs": [
+            {
+              "targets": [ "card:9000" ]
+            }
+          ]
+        },
+        {
+          "job_name": "gateway-server",
+          "metrics_path": "/actuator/prometheus",
+          "static_configs": [
+            {
+              "targets": [ "gateway-server:8072" ]
+            }
+          ]
+        }
+      ]

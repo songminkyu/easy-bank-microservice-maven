@@ -1,0 +1,14 @@
+server:
+  port: 8070
+
+spring:
+  kafka:
+    bootstrap-servers: http://kafka:9092
+  logging:
+    loki:
+      url: http://gateway:3100/loki/api/v1/push
+
+management:
+  zipkin:
+    tracing:
+      endpoint: http://tempo:9411

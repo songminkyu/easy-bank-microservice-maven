@@ -1,0 +1,33 @@
+spring:
+  cloud:
+    config:
+      enabled: false
+  kafka:
+    bootstrap-servers: http://localhost:9092
+  security:
+    user:
+      name: easybank
+      password: root
+      roles: USER, ADMIN
+    content-security-policy: "script-src 'self'"
+  logging:
+    loki:
+      enabled: false
+      url: http://localhost:3100/loki/api/v1/push
+
+eureka:
+  instance:
+    hostname: localhost
+    preferIpAddress: true
+  client:
+    fetchRegistry: false
+    registerWithEureka: false
+    serviceUrl:
+      defaultZone: http://${spring.security.user.name}:${spring.security.user.password}@${eureka.instance.hostname}:${server.port}/eureka/
+
+logging:
+  level:
+    ROOT: DEBUG
+    io.github.susimsek.eurekaserver: DEBUG
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'

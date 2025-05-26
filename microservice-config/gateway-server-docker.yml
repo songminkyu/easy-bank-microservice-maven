@@ -1,0 +1,101 @@
+server:
+  port: 8072
+spring:
+  kafka:
+    bootstrap-servers: http://kafka:9092
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password: "{cipher}72f6a7d004cec8a7558dd0a94bd59b3b10205cfdad18d890d510e57ed17c5d7f44554bd293cdd529d1192202dad75c3d9c5ef970f16dab4e0c4d66f2df708b38"
+      timeout: 1s
+      connect-timeout: 2s
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+          lower-case-service-id: true
+      routes:
+        - id: account-service
+          uri: lb://account
+          predicates:
+            - Path=/account/**, /eazybank/account/**
+          filters:
+            - ContextPathRewritePath=/eazybank/account/(?<path>.*), /$\{path}
+            - RewritePath=/account/(?<path>.*), /$\{path}
+            - name: CircuitBreaker
+              args:
+                name: accountCircuitBreaker
+                fallbackUri: forward:/contactSupport
+        - id: loan-service
+          uri: lb://loan
+          predicates:
+            - Path=/loan/**, /eazybank/loan/**
+          filters:
+            - ContextPathRewritePath=/eazybank/loan/(?<path>.*), /$\{path}
+            - RewritePath=/loan/(?<path>.*), /$\{path}
+            - name: Retry
+              args:
+                retries: 3
+                methods: GET
+                backoff:
+                  firstBackoff: 100ms
+                  maxBackoff: 1000ms
+                  factor: 2
+                  basedOnPreviousValue: true
+        - id: card-service
+          uri: lb://card
+          predicates:
+            - Path=/card/**, /eazybank/card/**
+          filters:
+            - ContextPathRewritePath=/eazybank/card/(?<path>.*), /$\{path}
+            - RewritePath=/card/(?<path>.*), /$\{path}
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter:
+                  replenishRate: 1
+                  burstCapacity: 1
+                  requestedTokens: 1
+                key-resolver: "#{@userKeyResolver}"
+        - id: openapi
+          uri: http://localhost:${server.port}
+          predicates:
+            - Path=/v3/api-docs/**
+          filters:
+            - RewritePath=/v3/api-docs/(?<path>.*), /$\{path}/v3/api-docs
+      httpclient:
+        connect-timeout: 1000
+        response-timeout: 5s
+      default-filters:
+        - TokenRelay
+        - RewritePath=/api/v1/.*?/(?<remaining>.*), /$\{remaining}
+    kubernetes:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://keycloak:7080/realms/eazybank/protocol/openid-connect/certs
+  logging:
+    loki:
+      url: http://gateway:3100/loki/api/v1/push
+
+eureka:
+  instance:
+    preferIpAddress: true
+  server:
+    password: "{cipher}9e37167bf33b458463119a7927279b4f53ea984472903a0c2b61197a8739714b"
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: http://easybank:${eureka.server.password}@eureka-server:8070/eureka/
+
+management:
+  zipkin:
+    tracing:
+      endpoint: http://tempo:9411

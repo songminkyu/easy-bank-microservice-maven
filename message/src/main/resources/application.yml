@@ -1,0 +1,36 @@
+server:
+  port: 9010
+
+spring:
+  application:
+    name: message
+  main:
+    allow-bean-definition-overriding: true
+  output:
+    ansi:
+      enabled: always
+  cloud:
+    function:
+      definition: email|sms
+    stream:
+      bindings:
+        emailsms-in-0:
+          destination: send-communication
+          group: ${spring.application.name}
+        emailsms-out-0:
+          destination: communication-sent
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    connection-timeout: 10s
+  kafka:
+    bootstrap-servers: http://localhost:9092
+
+logging:
+  level:
+    ROOT: INFO
+    io.github.susimsek.message: INFO
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'

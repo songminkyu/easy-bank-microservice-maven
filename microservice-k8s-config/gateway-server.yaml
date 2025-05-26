@@ -1,0 +1,153 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-server
+  namespace: default
+data:
+  application.yml: |-
+    server:
+      port: 8072
+      shutdown: graceful
+    
+    spring:
+      main:
+        allow-bean-definition-overriding: true
+      output:
+        ansi:
+          enabled: always
+    
+    management:
+      health:
+        readiness-state:
+          enabled: true
+        liveness-state:
+          enabled: true
+      endpoints:
+        web:
+          exposure:
+            include: "*"
+      endpoint:
+        gateway:
+          enabled: true
+        health:
+          probes:
+            enabled: true
+      info:
+        env:
+          enabled: true
+      metrics:
+        tags:
+          application: ${spring.application.name}
+      tracing:
+        sampling:
+          probability: 1.0
+        enabled: true
+    
+    springdoc:
+      swagger-ui:
+        urls:
+          - name: account
+            url: /v3/api-docs/account
+          - name: loan
+            url: /v3/api-docs/loan
+          - name: card
+            url: /v3/api-docs/card
+        use-root-path: true
+      cache:
+        disabled: true
+    ---
+    
+    spring:
+      config:
+        activate:
+          on-profile: k8s
+      kafka:
+        bootstrap-servers: http://kafka:9092
+      data:
+        redis:
+          host: redis-master
+          port: 6379
+          password: "{cipher}72f6a7d004cec8a7558dd0a94bd59b3b10205cfdad18d890d510e57ed17c5d7f44554bd293cdd529d1192202dad75c3d9c5ef970f16dab4e0c4d66f2df708b38"
+          timeout: 1s
+          connect-timeout: 2s
+      cloud:
+        gateway:
+          routes:
+            - id: account-service
+              uri: http://account:8080
+              predicates:
+                - Path=/account/**, /eazybank/account/**
+              filters:
+                - ContextPathRewritePath=/eazybank/account/(?<path>.*), /$\{path}
+                - RewritePath=/account/(?<path>.*), /$\{path}
+                - name: CircuitBreaker
+                  args:
+                    name: accountCircuitBreaker
+                    fallbackUri: forward:/contactSupport
+            - id: loan-service
+              uri: http://loan:8090
+              predicates:
+                - Path=/loan/**, /eazybank/loan/**
+              filters:
+                - ContextPathRewritePath=/eazybank/loan/(?<path>.*), /$\{path}
+                - RewritePath=/loan/(?<path>.*), /$\{path}
+                - name: Retry
+                  args:
+                    retries: 3
+                    methods: GET
+                    backoff:
+                      firstBackoff: 100ms
+                      maxBackoff: 1000ms
+                      factor: 2
+                      basedOnPreviousValue: true
+            - id: card-service
+              uri: http://card:9000
+              predicates:
+                - Path=/card/**, /eazybank/card/**
+              filters:
+                - ContextPathRewritePath=/eazybank/card/(?<path>.*), /$\{path}
+                - RewritePath=/card/(?<path>.*), /$\{path}
+                - name: RequestRateLimiter
+                  args:
+                    redis-rate-limiter:
+                      replenishRate: 1
+                      burstCapacity: 1
+                      requestedTokens: 1
+                    key-resolver: "#{@userKeyResolver}"
+            - id: openapi
+              uri: http://localhost:${server.port}
+              predicates:
+                - Path=/v3/api-docs/**
+              filters:
+                - RewritePath=/v3/api-docs/(?<path>.*), /$\{path}/v3/api-docs
+          httpclient:
+            connect-timeout: 1000
+            response-timeout: 5s
+          default-filters:
+            - RewritePath=/api/v1/.*?/(?<remaining>.*), /$\{remaining}
+        kubernetes:
+          discovery:
+            all-namespaces: true
+          discoveryServer:
+            url: http://spring-cloud-kubernetes-discoveryserver:80/
+        discovery:
+          client:
+            health-indicator:
+              enabled: false
+      security:
+        oauth2:
+          resourceserver:
+            jwt:
+              jwk-set-uri: http://keycloak:7080/realms/eazybank/protocol/openid-connect/certs
+              
+    server:
+      port: 8072
+    
+    eureka:
+      client:
+        enabled: false
+    
+    management:
+      zipkin:
+        tracing:
+          endpoint: http://tempo-grafana-tempo-distributor:9411

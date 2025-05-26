@@ -1,0 +1,20 @@
+{{- if and .Values.serviceAccount.create .Values.rbac.create }}
+kind: RoleBinding
+apiVersion: {{ include "spring-cloud-kubernetes-discoveryserver.capabilities.rbac.apiVersion" . }}
+metadata:
+  name: {{ template "spring-cloud-kubernetes-discoveryserver.fullname" . }}
+  namespace: {{ include "spring-cloud-kubernetes-discoveryserver.namespace" . | quote }}
+  labels: {{- include "spring-cloud-kubernetes-discoveryserver.labels" ( dict "customLabels" .Values.commonLabels "context" $ ) | nindent 4 }}
+    app.kubernetes.io/component: spring-cloud-kubernetes-discoveryserver
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "spring-cloud-kubernetes-discoveryserver.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ template "spring-cloud-kubernetes-discoveryserver.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ template "spring-cloud-kubernetes-discoveryserver.serviceAccountName" . }}
+    namespace: {{ include "spring-cloud-kubernetes-discoveryserver.namespace" . | quote }}
+{{- end }}

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="1699725639940-1" author="susimsek (generated)">
+        <createSequence incrementBy="1" minValue="1" maxValue="9999999999999999" cycle="false" cacheSize="50000" sequenceName="seq_revision_info" startValue="1"/>
+    </changeSet>
+    <changeSet id="1699725639940-2" author="susimsek (generated)">
+        <createTable tableName="account_history">
+            <column name="revision" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_account_history"/>
+            </column>
+            <column name="revision_type" type="SMALLINT"/>
+            <column name="customer_id" type="BIGINT"/>
+            <column name="account_number" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_account_history"/>
+            </column>
+            <column name="account_type" type="VARCHAR(100)"/>
+            <column name="branch_address" type="VARCHAR(200)"/>
+            <column name="communication_sw" type="BOOLEAN"/>
+            <column name="deleted" type="BOOLEAN"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1699725639940-3" author="susimsek (generated)">
+        <createTable tableName="revision_info">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_revision_info"/>
+            </column>
+            <column name="timestamp" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="1699725639940-4" author="susimsek (generated)">
+        <addForeignKeyConstraint baseColumnNames="revision" baseTableName="account_history"
+                                 constraintName="FK_ACCOUNT_HISTORY_ON_REVISION" referencedColumnNames="id"
+                                 referencedTableName="revision_info"/>
+    </changeSet>
+
+</databaseChangeLog>

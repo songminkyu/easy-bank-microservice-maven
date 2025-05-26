@@ -1,0 +1,62 @@
+{{- define "common.configmap" -}}
+{{- if .Values.configMap.create }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "common.fullname" . | quote }}
+  namespace: {{ include "common.namespace" . | quote }}
+  labels: {{- include "common.labels" ( dict "customLabels" .Values.commonLabels "context" $ ) | nindent 4 }}
+    app.kubernetes.io/component: {{ include "common.fullname" . | quote }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+data:
+  SPRING_APPLICATION_NAME: {{ include "common.fullname" . | quote }}
+  {{- if .Values.spring.profiles.active }}
+  SPRING_PROFILES_ACTIVE: {{ .Values.spring.profiles.active | quote }}
+  {{- end }}
+  {{- if .Values.configServer.enabled }}
+  SPRING_CONFIG_IMPORT: {{ .Values.spring.cloud.configServer.url | quote }}
+  {{- end }}
+  {{- if .Values.eurekaServer.enabled }}
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: {{ .Values.spring.cloud.eurekaServer.url | quote }}
+  {{- end }}
+  {{- if .Values.kubernetesDiscoveryServer.enabled }}
+  SPRING.CLOUD.KUBERNETES.DISCOVERY.DISCOVERY-SERVER-URL: {{ .Values.spring.cloud.kubernetes.discoveryServer.url | quote }}
+  {{- end }}
+  {{- if .Values.authorizationServer.enabled }}
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK-SET-URI: {{ .Values.spring.authorizationServer.url | quote }}
+  {{- end }}
+  {{- if .Values.tracing.enabled }}
+  MANAGEMENT_TRACING_ENABLED: {{ .Values.tracing.enabled | quote }}
+  MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: {{ .Values.spring.zipkin.tracingEndpoint | quote }}
+  {{- end }}
+  {{- if .Values.kafka.enabled }}
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: {{ .Values.spring.kafka.bootstrapServers | quote }}
+  {{- end }}
+  {{- if and .Values.database.enabled .Values.database.type "sql" }}
+  SPRING_DATASOURCE_URL: {{ .Values.spring.datasource.url | quote }}
+  SPRING_DATASOURCE_USERNAME: {{ .Values.spring.datasource.username | quote }}
+  SPRING_DATASOURCE_PASSWORD: {{ .Values.spring.datasource.password | quote }}
+  SPRING_LIQUIBASE_CONTEXTS:  {{ .Values.spring.liquibase.contexts | quote }}
+  {{- end }}
+  {{- if .Values.redis.enabled  }}
+  SPRING_DATA_REDIS_HOST: {{ .Values.spring.redis.host | quote }}
+  SPRING_DATA_REDIS_PORT: {{ .Values.spring.redis.port | quote }}
+  SPRING_DATA_REDIS_PASSWORD: {{ .Values.spring.redis.password | quote }}
+  SPRING_DATA_REDIS_TIMEOUT: {{ .Values.spring.redis.timeout | quote }}
+  SPRING_DATA_REDIS_CONNECT-TIMEOUT: {{ .Values.spring.redis.connectTimeout | quote }}
+  {{- end }}
+  {{- if .Values.security.user.enabled }}
+  SPRING_SECURITY_USER_NAME: {{ .Values.spring.security.user.name | quote }}
+  SPRING_SECURITY_USER_PASSWORD: {{ .Values.spring.security.user.password | quote }}
+  {{- end }}
+  {{- if .Values.encryption.enabled }}
+  ENCRYPT_KEY: {{ .Values.encryption.key | quote }}
+  {{- end }}
+  {{- if .Values.logging.loki.enabled }}
+  SPRING_LOGGING_LOKI_ENABLED: {{ .Values.logging.loki.enabled | quote }}
+  SPRING_LOGGING_LOKI_URL: {{ .Values.spring.logging.loki.url | quote }}
+  {{- end }}
+{{- end }}
+{{- end -}}

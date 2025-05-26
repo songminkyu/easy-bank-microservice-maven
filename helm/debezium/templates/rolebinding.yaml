@@ -1,0 +1,20 @@
+{{- if and .Values.serviceAccount.create .Values.rbac.create }}
+kind: RoleBinding
+apiVersion: {{ include "debezium.capabilities.rbac.apiVersion" . }}
+metadata:
+  name: {{ template "debezium.fullname" . }}
+  namespace: {{ include "debezium.namespace" . | quote }}
+  labels: {{- include "debezium.labels" ( dict "customLabels" .Values.commonLabels "context" $ ) | nindent 4 }}
+    app.kubernetes.io/component: debezium
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "debezium.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ template "debezium.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ template "debezium.serviceAccountName" . }}
+    namespace: {{ include "debezium.namespace" . | quote }}
+{{- end }}

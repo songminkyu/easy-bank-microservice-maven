@@ -1,0 +1,6 @@
+tempo:
+    traces:
+        otlp:
+            http: true
+            grpc: true
+        zipkin: true

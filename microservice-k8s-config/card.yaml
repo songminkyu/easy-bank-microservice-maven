@@ -1,0 +1,233 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: card
+  namespace: default
+data:
+  application.yml: |-
+    build:
+      version: "3.0"
+    
+    card:
+      message: "Welcome to EazyBank card related local APIs "
+      contactDetails:
+        name: "Dragos Lech - Developer"
+        email: "dragos@eazybank.com"
+      onCallSupport:
+        - (412) 419-3491
+        - (915) 382-1932
+    
+    spring:
+      main:
+        allow-bean-definition-overriding: true
+      output:
+        ansi:
+          enabled: always
+    
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: "*"
+      health:
+        readiness-state:
+          enabled: true
+        liveness-state:
+          enabled: true
+      endpoint:
+        shutdown:
+          enabled: true
+        health:
+          probes:
+            enabled: true
+      info:
+        env:
+          enabled: true
+      metrics:
+        tags:
+          application: ${spring.application.name}
+      tracing:
+        sampling:
+          probability: 1.0
+        enabled: true
+    
+    springdoc:
+      oAuthFlow:
+        tokenUrl: http://localhost:7080/realms/eazybank/protocol/openid-connect/token
+    ---
+    
+    spring:
+      config:
+        activate:
+          on-profile: qa
+      main:
+        allow-bean-definition-overriding: true
+      output:
+        ansi:
+          enabled: always
+    build:
+      version: "2.0"
+    
+    card:
+      message: "Welcome to EazyBank card related QA APIs "
+      contactDetails:
+        name: "Cherryl Pankaj - QA Lead"
+        email: "cherryl@eazybank.com"
+      onCallSupport:
+        - (310) 875-4367
+        - (201) 236-1267
+    
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: "*"
+      health:
+        readiness-state:
+          enabled: true
+        liveness-state:
+          enabled: true
+      endpoint:
+        shutdown:
+          enabled: true
+        health:
+          probes:
+            enabled: true
+      info:
+        env:
+          enabled: true
+      metrics:
+        tags:
+          application: ${spring.application.name}
+      tracing:
+        sampling:
+          probability: 1.0
+        enabled: true
+    ---
+    
+    spring:
+      config:
+        activate:
+          on-profile: prod
+      main:
+        allow-bean-definition-overriding: true
+      output:
+        ansi:
+          enabled: always
+      devtools:
+        restart:
+          enabled: false
+        livereload:
+          enabled: false
+    server:
+      shutdown: graceful
+    
+    build:
+      version: "1.0"
+    
+    card:
+      message: "Welcome to EazyBank card related prod APIs "
+      contactDetails:
+        name: "Sandra Harald - Product Owner"
+        email: "sandra@eazybank.com"
+      onCallSupport:
+        - (617) 432-2356
+        - (936) 564-8721
+    
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: "*"
+      health:
+        readiness-state:
+          enabled: true
+        liveness-state:
+          enabled: true
+      endpoint:
+        shutdown:
+          enabled: true
+        health:
+          probes:
+            enabled: true
+      info:
+        env:
+          enabled: true
+      metrics:
+        tags:
+          application: ${spring.application.name}
+      tracing:
+        sampling:
+          probability: 1.0
+        enabled: true
+    ---
+    
+    spring:
+      config:
+        activate:
+          on-profile: k8s
+      datasource:
+        url: jdbc:postgresql://postgresql:5432/carddb
+        username: easybank
+        password: "{cipher}9e37167bf33b458463119a7927279b4f53ea984472903a0c2b61197a8739714b"
+        hikari:
+          maximum-pool-size: 30
+          minimum-idle: 1
+          pool-name: Hikari
+          auto-commit: false
+      jpa:
+        hibernate:
+          ddl-auto: none
+          naming:
+            physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+            implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+        show-sql: true
+        open-in-view: false
+        properties:
+          hibernate.connection.provider_disables_autocommit: true
+          hibernate.cache.redisson.fallback: true
+          hibernate.cache.use_second_level_cache: true
+          hibernate.cache.use_query_cache: true
+          hibernate.generate_statistics: false
+          hibernate.jdbc.batch_size: 25
+          hibernate.order_inserts: true
+          hibernate.order_updates: true
+          hibernate.query.fail_on_pagination_over_collection_fetch: true
+          hibernate.query.in_clause_parameter_padding: true
+          jakarta.persistence.sharedCache.mode: ENABLE_SELECTIVE
+          hibernate.cache.redisson.entity.expiration.max_entries: 10000
+          hibernate.cache.redisson.entity.expiration.time_to_live: 3600000
+          hibernate.cache.redisson.entity.expiration.max_idle_time: 1800000
+          hibernate.cache.redisson.query.eviction.max_entries: 10000
+          hibernate.cache.redisson.query.eviction.time_to_live: 3600000
+          hibernate.cache.redisson.query.eviction.max_idle_time: 1800000
+      data:
+        redis:
+          host: redis-master
+          port: 6379
+          password: "{cipher}72f6a7d004cec8a7558dd0a94bd59b3b10205cfdad18d890d510e57ed17c5d7f44554bd293cdd529d1192202dad75c3d9c5ef970f16dab4e0c4d66f2df708b38"
+      kafka:
+        bootstrap-servers: http://kafka:9092
+      cloud:
+        kubernetes:
+          discovery:
+            all-namespaces: true
+          discoveryServer:
+            url: http://spring-cloud-kubernetes-discoveryserver:80/
+            
+    server:
+      port: 9000
+    
+    eureka:
+      client:
+        enabled: false
+    
+    management:
+      zipkin:
+        tracing:
+          endpoint: http://tempo-grafana-tempo-distributor:9411
+          
+          
+          
+          
+          

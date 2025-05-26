@@ -1,0 +1,544 @@
+services:
+#  rabbitmq:
+#    container_name: rabbitmq
+#    image: docker.io/bitnami/rabbitmq:3.12.7
+#    ports:
+#      - 5672:5672
+#      - 15672:15672
+#    volumes:
+#      - rabbitmq:/bitnami/rabbitmq/mnesia
+#    healthcheck:
+#      test: rabbitmq-diagnostics check_port_connectivity
+#      interval: 10s
+#      timeout: 5s
+#      retries: 10
+#      start_period: 5s
+#    environment:
+#      RABBITMQ_SECURE_PASSWORD: yes
+#      RABBITMQ_USERNAME: admin
+#      RABBITMQ_PASSWORD: admin
+#    extends:
+#      file: common-config.yml
+#      service: network-deploy-service
+
+  keycloak:
+    container_name: keycloak
+    image: quay.io/keycloak/keycloak:22.0.4
+    ports:
+      - 7080:7080
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgresql:5432/keycloak
+      KC_DB_USERNAME: easybank
+      KC_DB_PASSWORD: root
+      KC_HEALTH_ENABLED: true
+      KC_METRICS_ENABLED: true
+      KC_FEATURES: scripts
+      KC_HTTP_PORT: 7080
+      KC_HTTPS_PORT: 9443
+    command: "start-dev --import-realm"
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+    healthcheck:
+      test: 'bash /opt/keycloak/health-check.sh'
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    volumes:
+      - ./realm-config:/opt/keycloak/data/import
+      - ./realm-config/keycloak-health-check.sh:/opt/keycloak/health-check.sh
+
+  read:
+    container_name: read
+    image: grafana/loki:2.8.3
+    command: "-config.file=/etc/loki/config.yaml -target=read"
+    ports:
+      - 3101:3100
+      - 7946
+      - 9095
+    volumes:
+      - ../observability/loki/loki-config.yaml:/etc/loki/config.yaml
+    depends_on:
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: &loki-dns
+      eazybank:
+        aliases:
+          - loki
+
+  write:
+    container_name: write
+    image: grafana/loki:2.8.3
+    command: "-config.file=/etc/loki/config.yaml -target=write"
+    ports:
+      - 3102:3100
+      - 7946
+      - 9095
+    volumes:
+      - ../observability/loki/loki-config.yaml:/etc/loki/config.yaml
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      <<: *loki-dns
+
+  promtail:
+    container_name: promtail
+    image: grafana/promtail:2.8.3
+    volumes:
+      - ../observability/promtail/promtail-local-config.yaml:/etc/promtail/config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/config.yaml
+    depends_on:
+      gateway:
+        condition: service_healthy
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+  minio:
+    container_name: minio
+    image: minio/minio
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        mkdir -p /data/loki-data && \
+        mkdir -p /data/loki-ruler && \
+        minio server /data
+    environment:
+      - MINIO_ROOT_USER=loki
+      - MINIO_ROOT_PASSWORD=supersecret
+      - MINIO_PROMETHEUS_AUTH_TYPE=public
+      - MINIO_UPDATE=off
+    ports:
+      - 9000
+    volumes:
+      - minio:/data
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 15s
+      timeout: 20s
+      retries: 5
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:v2.45.0
+    ports:
+      - 9090:9090
+    volumes:
+      - ../observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus:/prometheus
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+  tempo:
+    container_name: tempo
+    image: grafana/tempo:latest
+    command: -config.file /etc/tempo-config.yml
+    ports:
+      - 3110:3100     # Tempo
+      - 4317:4317     # OTLP
+      - 9411:9411     # Zipkin
+    volumes:
+      - ../observability/tempo/tempo.yml:/etc/tempo-config.yml
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    environment:
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    depends_on:
+      gateway:
+        condition: service_healthy
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        /run.sh
+    ports:
+      - 3000:3000
+    volumes:
+      - ../observability/grafana/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
+      - grafana:/var/lib/grafana
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+  gateway:
+    container_name: gateway
+    image: nginx:latest
+    depends_on:
+      read:
+        condition: service_healthy
+      write:
+        condition: service_healthy
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        cat <<EOF > /etc/nginx/nginx.conf
+        user  nginx;
+        worker_processes  5;  ## Default: 1
+        
+        events {
+          worker_connections   1000;
+        }
+        
+        http {
+          resolver 127.0.0.11;
+        
+          server {
+            listen             3100;
+        
+            location = / {
+              return 200 'OK';
+              auth_basic off;
+            }
+        
+            location = /api/prom/push {
+              proxy_pass       http://write:3100\$$request_uri;
+            }
+        
+            location = /api/prom/tail {
+              proxy_pass       http://read:3100\$$request_uri;
+              proxy_set_header Upgrade \$$http_upgrade;
+              proxy_set_header Connection "upgrade";
+            }
+        
+            location ~ /api/prom/.* {
+              proxy_pass       http://read:3100\$$request_uri;
+            }
+        
+            location = /loki/api/v1/push {
+              proxy_pass       http://write:3100\$$request_uri;
+            }
+        
+            location = /loki/api/v1/tail {
+              proxy_pass       http://read:3100\$$request_uri;
+              proxy_set_header Upgrade \$$http_upgrade;
+              proxy_set_header Connection "upgrade";
+            }
+        
+            location ~ /loki/api/.* {
+              proxy_pass       http://read:3100\$$request_uri;
+            }
+          }
+        }
+        EOF
+        /docker-entrypoint.sh nginx -g "daemon off;"
+    ports:
+      - "3100:3100"
+    healthcheck:
+      test: [ "CMD", "service", "nginx", "status" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+  redis:
+    container_name: redis
+    image: docker.io/bitnami/redis:7.0.13
+    ports:
+      - 6379:6379
+    environment:
+      REDIS_PASSWORD: d41d8cd98f00b204e9800998ecf8427e
+    volumes:
+      - redis:/bitnami/redis/data
+    healthcheck:
+      test: redis-cli --no-auth-warning -a $$REDIS_PASSWORD ping | grep PONG
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+  postgresql:
+    container_name: postgresql
+    ports:
+      - 5432:5432
+    volumes:
+      - ./postgresql/initdb.sql:/docker-entrypoint-initdb.d/initdb.sql
+      - postgresql:/bitnami/postgresql
+    extends:
+      file: common-config.yml
+      service: microservice-db-config
+
+  kafka:
+    image: docker.io/bitnami/kafka:3.5.1
+    container_name: kafka
+    ports:
+      - 9094:9094
+    environment:
+      KAFKA_CFG_NODE_ID: 0
+      KAFKA_CFG_PROCESS_ROLES: controller,broker
+      ALLOW_PLAINTEXT_LISTENER: yes
+      KAFKA_ENABLE_KRAFT: yes
+      KAFKA_KRAFT_CLUSTER_ID: s_vb8yLzRnyOVW3Ko2mUbg
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
+      KAFKA_CFG_LISTENERS: CLIENT://:9092,EXTERNAL://:9094,CONTROLLER://:9093
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CFG_ADVERTISED_LISTENERS: CLIENT://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: CLIENT
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CFG_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    volumes:
+      - kafka:/bitnami/kafka
+    healthcheck:
+      test: kafka-cluster.sh cluster-id --bootstrap-server localhost:9092 || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+  connect:
+    image: debezium/connect:2.4.0.Final
+    container_name: connect
+    ports:
+      - 8083:8083
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      REST_ADVERTISED_HOST_NAME: connect
+      REST_PORT: 8083
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: debezium_connect_configs
+      OFFSET_STORAGE_TOPIC: debezium_connect_offsets
+      STATUS_STORAGE_TOPIC:  debezium_connect_statuses
+      KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
+      VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
+    healthcheck:
+      test: curl --fail --silent localhost:8083/connectors
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+  config-server:
+    image: suayb/config-server:s17
+    container_name: config-server-ms
+    ports:
+      - 8071:8071
+    environment:
+      SPRING_APPLICATION_NAME: config-server
+      SPRING_SECURITY_USER_NAME: easybank
+      SPRING_SECURITY_USER_PASSWORD: root
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      ENCRYPT_KEY: 45D81EC1EF61DF9AD8D3E5BB397F9
+      MANAGEMENT_TRACING_ENABLED: "true"
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://tempo:9411
+      SPRING_LOGGING_LOKI_ENABLED: "true"
+      SPRING_LOGGING_LOKI_URL: http://gateway:3100/loki/api/v1/push
+    depends_on:
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: curl --fail --silent localhost:8071/actuator/health/readiness | grep UP || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    extends:
+      file: common-config.yml
+      service: microservice-base-config
+
+  eureka-server:
+    image: suayb/eureka-server:s17
+    container_name: eureka-server-ms
+    ports:
+      - 8070:8070
+    environment:
+      SPRING_APPLICATION_NAME: eureka-server
+    depends_on:
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: curl --fail --silent localhost:8070/actuator/health/readiness | grep UP || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    extends:
+      file: common-config.yml
+      service: microservice-config-server-config
+
+  account:
+    image: suayb/account:s17
+    container_name: account-ms
+    ports:
+      - 8080:8080
+    environment:
+      SPRING_APPLICATION_NAME: account
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/accountdb
+#      SPRING_RABBITMQ_HOST: rabbitmq
+#      SPRING_RABBITMQ_PORT: 5672
+#      SPRING_RABBITMQ_USERNAME: admin
+#      SPRING_RABBITMQ_PASSWORD: admin
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: curl --fail --silent localhost:8080/actuator/health/readiness | grep UP || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    extends:
+      file: common-config.yml
+      service: microservice-eureka-config
+
+  loan:
+    image: suayb/loan:s17
+    container_name: loan-ms
+    ports:
+      - 8090:8090
+    environment:
+      SPRING_APPLICATION_NAME: loan
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/loandb
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: curl --fail --silent localhost:8090/actuator/health/readiness | grep UP || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    extends:
+      file: common-config.yml
+      service: microservice-eureka-config
+
+  card:
+    image: suayb/card:s17
+    container_name: card-ms
+    ports:
+      - 9000:9000
+    environment:
+      SPRING_APPLICATION_NAME: card
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/carddb
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: curl --fail --silent localhost:9000/actuator/health/readiness | grep UP || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    extends:
+      file: common-config.yml
+      service: microservice-eureka-config
+
+  message:
+    image: suayb/message:s17
+    container_name: message-ms
+    ports:
+      - 9010:9010
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+#      SPRING_RABBITMQ_HOST: rabbitmq
+#      SPRING_RABBITMQ_PORT: 5672
+#      SPRING_RABBITMQ_USERNAME: admin
+#      SPRING_RABBITMQ_PASSWORD: admin
+    depends_on:
+      kafka:
+        condition: service_healthy
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+  gateway-server:
+    image: suayb/gateway-server:s17
+    container_name: gateway-server-ms
+    ports:
+      - 8072:8072
+    depends_on:
+      redis:
+        condition: service_healthy
+      account:
+        condition: service_healthy
+      loan:
+        condition: service_healthy
+      card:
+        condition: service_healthy
+    healthcheck:
+      test: curl --fail --silent localhost:8072/actuator/health/readiness | grep UP || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    environment:
+      SPRING_APPLICATION_NAME: gateway-server
+    extends:
+      file: common-config.yml
+      service: microservice-eureka-config
+
+networks:
+  eazybank:
+    driver: "bridge"
+
+volumes:
+  kafka:
+  postgresql:
+  redis:
+  minio:
+  prometheus:
+  grafana:
+  # rabbitmq:

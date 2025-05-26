@@ -1,0 +1,90 @@
+server:
+  port: 8072
+  forward-headers-strategy: framework
+spring:
+  application:
+    name: gateway-server
+  main:
+    allow-bean-definition-overriding: true
+  output:
+    ansi:
+      enabled: always
+  profiles:
+    active: local
+  cloud:
+    gateway:
+#      discovery:
+#        locator:
+#          enabled: false
+#          lower-case-service-id: true
+      httpclient:
+        connect-timeout: 1000
+        response-timeout: 5s
+      default-filters:
+        - TokenRelay
+        - RewritePath=/api/v1/.*?/(?<remaining>.*), /$\{remaining}
+  reactor:
+    context-propagation: auto
+#    kubernetes:
+#      loadbalancer:
+#        mode: service
+#      discovery:
+#        enabled: true
+#        all-namespaces: true
+#    discovery:
+#      client:
+#        health-indicator:
+#          enabled: false
+
+management:
+  health:
+    readiness-state:
+      enabled: true
+    liveness-state:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    gateway:
+      enabled: true
+    health:
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  observations:
+    key-values:
+      application: ${spring.application.name}
+
+info:
+  app:
+    name: "gateway-server"
+    description: "Eazy Bank Gateway Server Application"
+    version: "1.0.0"
+
+resilience4j.circuitbreaker:
+  configs:
+    default:
+      slidingWindowSize: 10
+      permittedNumberOfCallsInHalfOpenState: 2
+      failureRateThreshold: 50
+      waitDurationInOpenState: 10000
+
+springdoc:
+  swagger-ui:
+    urls:
+      - name: account
+        url: /v3/api-docs/account
+      - name: loan
+        url: /v3/api-docs/loan
+      - name: card
+        url: /v3/api-docs/card
+    use-root-path: true
+  cache:
+    disabled: true

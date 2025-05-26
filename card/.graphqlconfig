@@ -1,0 +1,5 @@
+{
+  "name": "Eazy Bank Card Microservice",
+  "schemaPath": "src/main/resources/graphql/schema.graphqls",
+  "extensions": {}
+}

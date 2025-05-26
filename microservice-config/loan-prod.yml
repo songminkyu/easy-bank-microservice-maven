@@ -1,0 +1,71 @@
+server:
+  shutdown: graceful
+build:
+  version: "1.0"
+
+loan:
+  message: "Welcome to EazyBank loan related production APIs "
+  contactDetails:
+    name: "Pelias Sudhir - Product Owner"
+    email: "pelias@eazybank.com"
+  onCallSupport:
+    - (723) 656-8709
+    - (156) 342-0956
+
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  output:
+    ansi:
+      enabled: always
+  devtools:
+    restart:
+      enabled: false
+    livereload:
+      enabled: false
+  liquibase:
+    contexts: prod
+  logging:
+    loki:
+      enabled: true
+  cache:
+    redisson:
+      regions:
+        entry.expiration.max_entries: 10000
+        entry.expiration.time-to-live: 3600000
+        entry.expiration.max_idle_time: 1800000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    readiness-state:
+      enabled: true
+    liveness-state:
+      enabled: true
+  endpoint:
+    shutdown:
+      enabled: true
+    health:
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+    enabled: true
+  observations:
+    key-values:
+      application: ${spring.application.name}
+
+logging:
+  level:
+    ROOT: INFO
+    io.github.susimsek.loan: INFO
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'

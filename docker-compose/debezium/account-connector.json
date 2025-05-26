@@ -1,0 +1,15 @@
+{
+  "name": "account-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "tasks.max": "1",
+    "database.hostname": "postgresql",
+    "database.port": "5432",
+    "database.user": "postgres",
+    "database.password": "root",
+    "database.dbname" : "accountdb",
+    "topic.prefix": "pg-changes",
+    "schema.include.list": "public",
+    "plugin.name": "pgoutput"
+  }
+}

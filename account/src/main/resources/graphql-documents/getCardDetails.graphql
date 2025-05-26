@@ -1,0 +1,10 @@
+query getCardDetails($mobileNumber: String!) {
+    card(mobileNumber: $mobileNumber) {
+        mobileNumber
+        cardNumber
+        cardType
+        totalLimit
+        amountUsed
+        availableAmount
+    }
+}

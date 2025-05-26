@@ -1,0 +1,49 @@
+server:
+  port: 8090
+spring:
+  datasource:
+    url: jdbc:postgresql://postgresql:5432/loandb
+    username: easybank
+    password: "{cipher}9e37167bf33b458463119a7927279b4f53ea984472903a0c2b61197a8739714b"
+    hikari:
+      pool-name: Hikari
+      auto-commit: false
+  data:
+    redis:
+      host: redis
+      port: 6379
+      password: "{cipher}72f6a7d004cec8a7558dd0a94bd59b3b10205cfdad18d890d510e57ed17c5d7f44554bd293cdd529d1192202dad75c3d9c5ef970f16dab4e0c4d66f2df708b38"
+  kafka:
+    bootstrap-servers: http://kafka:9092
+  cloud:
+    kubernetes:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+  logging:
+    loki:
+      url: http://gateway:3100/loki/api/v1/push
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://keycloak:7080/realms/eazybank/protocol/openid-connect/certs
+
+eureka:
+  instance:
+    preferIpAddress: true
+  server:
+    password: "{cipher}9e37167bf33b458463119a7927279b4f53ea984472903a0c2b61197a8739714b"
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: http://easybank:${eureka.server.password}@eureka-server:8070/eureka/
+
+management:
+  zipkin:
+    tracing:
+      endpoint: http://tempo:9411
+
+

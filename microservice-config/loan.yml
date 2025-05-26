@@ -1,0 +1,125 @@
+build:
+  version: "3.0"
+
+loan:
+  message: "Welcome to EazyBank loan related local APIs "
+  contactDetails:
+    name: "Amaal Grega - Developer"
+    email: "amaal@eazybank.com"
+  onCallSupport:
+    - (452) 456-2176
+    - (546) 764-8934
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  output:
+    ansi:
+      enabled: always
+  liquibase:
+    contexts: dev
+  logging:
+    loki:
+      enabled: true
+  datasource:
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 1
+      pool-name: Hikari
+      auto-commit: false
+  jpa:
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+    show-sql: true
+    open-in-view: false
+    properties:
+      hibernate.connection.provider_disables_autocommit: true
+      hibernate.cache.redisson.fallback: true
+      hibernate.cache.use_second_level_cache: true
+      hibernate.cache.use_query_cache: true
+      hibernate.generate_statistics: false
+      hibernate.jdbc.batch_size: 25
+      hibernate.order_inserts: true
+      hibernate.order_updates: true
+      hibernate.query.fail_on_pagination_over_collection_fetch: true
+      hibernate.query.in_clause_parameter_padding: true
+      jakarta.persistence.sharedCache.mode: ENABLE_SELECTIVE
+      hibernate.cache.redisson.entity.expiration.max_entries: 10000
+      hibernate.cache.redisson.entity.expiration.time_to_live: 3600000
+      hibernate.cache.redisson.entity.expiration.max_idle_time: 1800000
+      hibernate.cache.redisson.query.eviction.max_entries: 10000
+      hibernate.cache.redisson.query.eviction.time_to_live: 3600000
+      hibernate.cache.redisson.query.eviction.max_idle_time: 1800000
+  cache:
+    redisson:
+      regions:
+        entry.expiration.max_entries: 10000
+        entry.expiration.time-to-live: 3600000
+        entry.expiration.max_idle_time: 1800000
+  mvc:
+    problemdetails:
+      enabled: true
+  task:
+    execution:
+      thread-name-prefix: account-task-
+      pool:
+        core-size: 2
+        max-size: 50
+        queue-capacity: 10000
+    scheduling:
+      pool:
+        size: 2
+  web:
+    locale: en
+  messages:
+    basename: i18n/messages
+    fallback-to-system-locale: false
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+    default-property-inclusion: non_null
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    readiness-state:
+      enabled: true
+    liveness-state:
+      enabled: true
+  endpoint:
+    shutdown:
+      enabled: true
+    health:
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+    enabled: true
+  observations:
+    key-values:
+      application: ${spring.application.name}
+
+springdoc:
+  oAuthFlow:
+    tokenUrl: http://localhost:7080/realms/eazybank/protocol/openid-connect/token
+  cache:
+    disabled: true
+
+logging:
+  level:
+    ROOT: INFO
+    io.github.susimsek.loan: INFO
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'

@@ -1,0 +1,63 @@
+build:
+  version: "2.0"
+
+card:
+  message: "Welcome to EazyBank card related QA APIs "
+  contactDetails:
+    name: "Cherryl Pankaj - QA Lead"
+    email: "cherryl@eazybank.com"
+  onCallSupport:
+    - (310) 875-4367
+    - (201) 236-1267
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  output:
+    ansi:
+      enabled: always
+  liquibase:
+    contexts: qa
+  logging:
+    loki:
+      enabled: true
+  cache:
+    redisson:
+      regions:
+        entry.expiration.max_entries: 10000
+        entry.expiration.time-to-live: 3600000
+        entry.expiration.max_idle_time: 1800000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    readiness-state:
+      enabled: true
+    liveness-state:
+      enabled: true
+  endpoint:
+    shutdown:
+      enabled: true
+    health:
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+    enabled: true
+  observations:
+    key-values:
+      application: ${spring.application.name}
+
+logging:
+  level:
+    ROOT: INFO
+    io.github.susimsek.card: INFO
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'

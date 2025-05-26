@@ -1,0 +1,98 @@
+server:
+  port: 8090
+  forward-headers-strategy: framework
+spring:
+  application:
+    name: loan
+  main:
+    allow-bean-definition-overriding: true
+  output:
+    ansi:
+      enabled: always
+  profiles:
+    active: local
+  liquibase:
+    change-log: classpath:config/liquibase/master.xml
+  jpa:
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+    show-sql: true
+    open-in-view: false
+    properties:
+      hibernate.connection.provider_disables_autocommit: true
+      hibernate.cache.redisson.fallback: true
+      hibernate.cache.use_second_level_cache: true
+      hibernate.cache.use_query_cache: true
+      hibernate.generate_statistics: false
+      hibernate.jdbc.batch_size: 25
+      hibernate.order_inserts: true
+      hibernate.order_updates: true
+      hibernate.query.fail_on_pagination_over_collection_fetch: true
+      hibernate.query.in_clause_parameter_padding: true
+      jakarta.persistence.sharedCache.mode: ENABLE_SELECTIVE
+      hibernate.cache.redisson.entity.expiration.max_entries: 10000
+      hibernate.cache.redisson.entity.expiration.time_to_live: 3600000
+      hibernate.cache.redisson.entity.expiration.max_idle_time: 1800000
+      hibernate.cache.redisson.query.eviction.max_entries: 10000
+      hibernate.cache.redisson.query.eviction.time_to_live: 3600000
+      hibernate.cache.redisson.query.eviction.max_idle_time: 1800000
+      org.hibernate.envers.audit_table_suffix: _history
+      org.hibernate.envers.revision_field_name: revision
+      org.hibernate.envers.revision_type_field_name: revision_type
+  web:
+    locale: en
+  messages:
+    basename: i18n/messages
+    fallback-to-system-locale: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    readiness-state:
+      enabled: true
+    liveness-state:
+      enabled: true
+  endpoint:
+    shutdown:
+      enabled: true
+    health:
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  observations:
+    key-values:
+      application: ${spring.application.name}
+
+endpoints:
+  shutdown:
+    enabled: true
+
+#eureka:
+#  instance:
+#    preferIpAddress: true
+#  client:
+#    fetchRegistry: true
+#    registerWithEureka: true
+#    serviceUrl:
+#      defaultZone: http://localhost:8070/eureka/
+
+info:
+  app:
+    name: "loan"
+    description: "Eazy Bank Loan Application"
+    version: "1.0.0"
+
+springdoc:
+  cache:
+    disabled: true

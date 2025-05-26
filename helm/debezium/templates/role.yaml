@@ -1,0 +1,23 @@
+{{- if and .Values.serviceAccount.create .Values.rbac.create }}
+kind: Role
+apiVersion: {{ include "debezium.capabilities.rbac.apiVersion" . }}
+metadata:
+  name: {{ template "debezium.fullname" . }}
+  namespace: {{ include "debezium.namespace" . | quote }}
+  labels: {{- include "debezium.labels" ( dict "customLabels" .Values.commonLabels "context" $ ) | nindent 4 }}
+    app.kubernetes.io/component: debezium
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "debezium.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+rules:
+  {{- if .Values.rbac.rules }}
+  {{- include "debezium.tplvalues.render" ( dict "value" .Values.rbac.rules "context" $ ) | nindent 2 }}
+  {{- end }}
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+{{- end }}

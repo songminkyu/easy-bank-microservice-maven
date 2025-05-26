@@ -1,0 +1,11 @@
+compactor:
+    service:
+        type: ClusterIP
+
+querier:
+    service:
+        type: ClusterIP
+
+queryScheduler:
+    service:
+        type: ClusterIP

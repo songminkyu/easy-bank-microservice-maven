@@ -1,0 +1,56 @@
+name: Card Test, Sonar and build.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}/card
+    env:
+      SPRING_OUTPUT_ANSI_ENABLED: DETECT
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: snyk/actions/setup@master
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+          cache: 'maven'
+      - name: Print Java Version
+        run:  java -version
+      - name: Download Dependencies
+        run: mvn dependency:go-offline
+      - name: Snyk test
+        continue-on-error: true
+        run: snyk test --all-projects
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      - name: Snyk monitor
+        continue-on-error: true
+        run: snyk monitor --all-projects
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      - name: Test
+        run: mvn -ntp clean verify
+      - name: Quality Analysis
+        run: mvn -ntp -Psonar initialize sonar:sonar -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+      - name: Deploy to github packages
+        run: mvn deploy -Dgpg.skip -Dgithub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and publish docker image
+        run: mvn -ntp -Pprod jib:build -DskipTests -Djib.to.auth.username=${{ secrets.DOCKER_USERNAME }} -Djib.to.auth.password=${{ secrets.DOCKER_PASSWORD }}

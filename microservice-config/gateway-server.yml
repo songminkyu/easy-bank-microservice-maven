@@ -1,0 +1,65 @@
+server:
+  port: 8072
+  shutdown: graceful
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  output:
+    ansi:
+      enabled: always
+  logging:
+    loki:
+      enabled: true
+  reactor:
+    context-propagation: auto
+  webflux:
+    problemdetails:
+      enabled: true
+
+management:
+  health:
+    readiness-state:
+      enabled: true
+    liveness-state:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    gateway:
+      enabled: true
+    health:
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+    enabled: true
+  observations:
+    key-values:
+      application: ${spring.application.name}
+
+springdoc:
+  swagger-ui:
+    urls:
+      - name: account
+        url: /v3/api-docs/account
+      - name: loan
+        url: /v3/api-docs/loan
+      - name: card
+        url: /v3/api-docs/card
+    use-root-path: true
+  cache:
+    disabled: true
+
+logging:
+  level:
+    ROOT: INFO
+    io.github.susimsek.gatewayserver: INFO
+  pattern:
+    level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
