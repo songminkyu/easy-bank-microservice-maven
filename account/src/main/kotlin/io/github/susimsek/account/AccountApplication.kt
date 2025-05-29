@@ -10,6 +10,6 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient
 @EnableConfigurationProperties(value = [AccountContactInfoDTO::class])
 @SpringBootApplication
 class AccountApplication
-fun main(args: Array<String>) {;
+fun main(args: Array<String>) {
     runApplication<AccountApplication>(*args)
 }
