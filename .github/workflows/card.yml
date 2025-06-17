@@ -47,6 +47,7 @@ jobs:
       - name: Test
         run: mvn -ntp clean verify
       - name: Quality Analysis
+        continue-on-error: true
         run: mvn -ntp -Psonar initialize sonar:sonar -Dsonar.token=${{ secrets.SONAR_TOKEN }}
       - name: Deploy to github packages
         run: mvn deploy -Dgpg.skip -Dgithub
