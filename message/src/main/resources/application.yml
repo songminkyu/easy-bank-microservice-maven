@@ -31,6 +31,6 @@ spring:
 logging:
   level:
     ROOT: INFO
-    io.github.susimsek.message: INFO
+    io.github.songminkyu.message: INFO
   pattern:
     level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'

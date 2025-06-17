@@ -28,6 +28,6 @@ eureka:
 logging:
   level:
     ROOT: DEBUG
-    io.github.susimsek.eurekaserver: DEBUG
+    io.github.songminkyu.eurekaserver: DEBUG
   pattern:
     level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'

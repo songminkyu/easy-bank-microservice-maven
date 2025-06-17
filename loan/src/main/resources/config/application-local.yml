@@ -76,7 +76,7 @@ logging:
   level:
     ROOT: DEBUG
     org.hibernate.SQL: DEBUG
-    io.github.susimsek.loan: DEBUG
+    io.github.songminkyu.loan: DEBUG
   pattern:
     level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
 

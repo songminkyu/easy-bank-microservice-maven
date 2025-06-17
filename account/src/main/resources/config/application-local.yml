@@ -171,6 +171,6 @@ logging:
   level:
     ROOT: DEBUG
     org.hibernate.SQL: DEBUG
-    io.github.susimsek.account: DEBUG
+    io.github.songminkyu.account: DEBUG
   pattern:
     level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'

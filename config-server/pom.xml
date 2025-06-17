@@ -3,18 +3,18 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>io.github.susimsek</groupId>
+        <groupId>io.github.songminkyu</groupId>
         <artifactId>parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
-    <groupId>io.github.susimsek</groupId>
+    <groupId>io.github.songminkyu</groupId>
     <artifactId>config-server</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>config-server</name>
     <description>config-server</description>
     <packaging>jar</packaging>
-    <url>https://github.com/susimsek/spring-boot-microservice-sample/</url>
+    <url>https://github.com/songminkyu/spring-boot-microservice-sample/</url>
 
     <developers>
         <developer>
@@ -24,8 +24,8 @@
     </developers>
 
     <scm>
-        <url>https://github.com/susimsek/spring-boot-microservice-sample.git</url>
-        <connection>scm:git:https://github.com/susimsek/spring-boot-microservice-sample.git</connection>
+        <url>https://github.com/songminkyu/spring-boot-microservice-sample.git</url>
+        <connection>scm:git:https://github.com/songminkyu/spring-boot-microservice-sample.git</connection>
         <tag>HEAD</tag>
     </scm>
 

@@ -60,6 +60,6 @@ springdoc:
 logging:
   level:
     ROOT: INFO
-    io.github.susimsek.gatewayserver: INFO
+    io.github.songminkyu.gatewayserver: INFO
   pattern:
     level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'

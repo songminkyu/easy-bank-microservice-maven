@@ -132,6 +132,6 @@ springdoc:
 logging:
   level:
     ROOT: INFO
-    io.github.susimsek.card: INFO
+    io.github.songminkyu.card: INFO
   pattern:
     level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'

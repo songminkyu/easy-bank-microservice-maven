@@ -9,13 +9,13 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
-    <groupId>io.github.susimsek</groupId>
+    <groupId>io.github.songminkyu</groupId>
     <artifactId>parent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>parent</name>
     <description>parent</description>
-    <url>https://github.com/susimsek/spring-boot-microservice-sample/</url>
+    <url>https://github.com/songminkyu/spring-boot-microservice-sample/</url>
 
     <developers>
         <developer>
@@ -25,8 +25,8 @@
     </developers>
 
     <scm>
-        <url>https://github.com/susimsek/spring-boot-microservice-sample.git</url>
-        <connection>scm:git:https://github.com/susimsek/spring-boot-microservice-sample.git</connection>
+        <url>https://github.com/songminkyu/spring-boot-microservice-sample.git</url>
+        <connection>scm:git:https://github.com/songminkyu/spring-boot-microservice-sample.git</connection>
         <tag>HEAD</tag>
     </scm>
 
@@ -392,11 +392,11 @@
             <distributionManagement>
                 <snapshotRepository>
                     <id>github</id>
-                    <url>https://maven.pkg.github.com/susimsek/spring-boot-microservice-sample/</url>
+                    <url>https://maven.pkg.github.com/songminkyu/spring-boot-microservice-sample/</url>
                 </snapshotRepository>
                 <repository>
                     <id>github</id>
-                    <url>https://maven.pkg.github.com/susimsek/spring-boot-microservice-sample/</url>
+                    <url>https://maven.pkg.github.com/songminkyu/spring-boot-microservice-sample/</url>
                 </repository>
             </distributionManagement>
         </profile>

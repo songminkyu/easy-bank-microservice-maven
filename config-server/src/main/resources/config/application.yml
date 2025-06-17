@@ -18,7 +18,7 @@ spring:
         # native:
           # search-locations: classpath:central-server-config
        git:
-         uri: https://github.com/susimsek/microservice-config.git
+         uri: https://github.com/songminkyu/microservice-config.git
          default-label: main
          timeout: 5
          clone-on-start: true
@@ -61,6 +61,6 @@ encrypt:
 logging:
   level:
     ROOT: INFO
-    io.github.susimsek.configserver: INFO
+    io.github.songminkyu.configserver: INFO
   pattern:
     level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'

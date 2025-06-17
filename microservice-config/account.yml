@@ -150,7 +150,7 @@ springdoc:
 logging:
   level:
     ROOT: INFO
-    io.github.susimsek.account: INFO
+    io.github.songminkyu.account: INFO
   pattern:
     level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
 
