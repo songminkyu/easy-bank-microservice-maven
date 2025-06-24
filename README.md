@@ -104,7 +104,7 @@ helm install eazybank-prod ./helm/environments/prod-env
 
 ### 로컬 개발 환경 설정
 
-1. JDK 17 설치
+1. JDK 21 설치
 2. Maven 3.8.8 이상 설치
 3. Docker 및 Docker Compose 설치
 4. 인프라 서비스 시작:
@@ -155,7 +155,7 @@ helm install eazybank-prod ./helm/environments/prod-env
 
 ## 기술 스택
 
-- **언어**: Java 17, Kotlin 2.1
+- **언어**: Java 21, Kotlin 2.1
 - **프레임워크**: Spring Boot 3.3, Spring Cloud 2023.0.1
 - **빌드 도구**: Maven 3.8.8
 - **데이터베이스**: PostgreSQL
