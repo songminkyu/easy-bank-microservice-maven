@@ -63,25 +63,25 @@ Eazy Bank Microservices Sample using Spring Boot & Spring Cloud
 
 - **Default**: 기본 로컬 개발 환경
   ```bash
-  cd docker-compose/default
+  cd k8s/docker-compose/default
   docker-compose up -d
   ```
 
 - **Dev**: 개발 환경
   ```bash
-  cd docker-compose/dev
+  cd k8s/docker-compose/dev
   docker-compose up -d
   ```
 
 - **QA**: QA 환경
   ```bash
-  cd docker-compose/qa
+  cd k8s/docker-compose/qa
   docker-compose up -d
   ```
 
 - **Prod**: 프로덕션 환경
   ```bash
-  cd docker-compose/prod
+  cd k8s/docker-compose/prod
   docker-compose up -d
   ```
 
@@ -91,13 +91,13 @@ Helm 차트를 사용하여 Kubernetes에 배포할 수도 있습니다:
 
 ```bash
 # 개발 환경 배포
-helm install eazybank-dev ./helm/environments/dev-env
+helm install eazybank-dev .k8s/helm/environments/dev-env
 
 # QA 환경 배포
-helm install eazybank-qa ./helm/environments/qa-env
+helm install eazybank-qa .k8s/helm/environments/qa-env
 
 # 프로덕션 환경 배포
-helm install eazybank-prod ./helm/environments/prod-env
+helm install eazybank-prod .k8s/helm/environments/prod-env
 ```
 
 ## 개발 및 디버깅
@@ -170,21 +170,26 @@ helm install eazybank-prod ./helm/environments/prod-env
 ## 프로젝트 구조
 
 ```
-easy-bank-msa-maven/
-├── account/                  # 계정 서비스
-├── card/                     # 카드 서비스
-├── config-server/            # 구성 서버
-├── docker-compose/           # Docker Compose 구성
-│   ├── default/              # 기본 환경
-│   ├── dev/                  # 개발 환경
-│   ├── qa/                   # QA 환경
-│   └── prod/                 # 프로덕션 환경
-├── eureka-server/            # 서비스 디스커버리
-├── gateway-server/           # API 게이트웨이
-├── helm/                     # Kubernetes Helm 차트
-├── loan/                     # 대출 서비스
-├── message/                  # 메시지 서비스
-├── microservice-config/      # 마이크로서비스 구성
-├── microservice-k8s-config/  # Kubernetes 구성
-└── parent/                   # 부모 POM
+easy-bank-msa-maven
+├── apps/                     # 애플리케이션 서비스
+│   ├── account/              # 계정 서비스
+│   ├── card/                 # 카드 서비스
+│   ├── config-server/        # 구성 서버
+│   ├── eureka-server/        # 서비스 디스커버리
+│   ├── gateway-server/       # API 게이트웨이
+│   ├── loan/                 # 대출 서비스
+│   ├── message/              # 메시지 서비스
+│   └── parent/               # 부모 POM
+└── k8s/                      # Kubernetes 및 인프라 구성
+    ├── docker-compose/       # Docker Compose 구성
+    │   ├── debezium/         # Debezium 환경
+    │   ├── default/          # 기본 환경
+    │   ├── dev/              # 개발 환경
+    │   ├── observability/    # 관측성 스택 환경
+    │   ├── prod/             # 프로덕션 환경
+    │   └── qa/               # QA 환경
+    ├── helm/                 # Kubernetes Helm 차트
+    ├── kubernetes/           # Kubernetes 구성
+    ├── microservice-config/  # 마이크로서비스 구성
+    └── microservice-k8s-config/ # Kubernetes 마이크로서비스 구성
 ```

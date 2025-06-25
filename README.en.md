@@ -63,25 +63,25 @@ The project provides Docker Compose configurations for various environments:
 
 - **Default**: Basic local development environment
   ```bash
-  cd docker-compose/default
+  cd k8s/docker-compose/default
   docker-compose up -d
   ```
 
 - **Dev**: Development environment
   ```bash
-  cd docker-compose/dev
+  cd k8s/docker-compose/dev
   docker-compose up -d
   ```
 
 - **QA**: QA environment
   ```bash
-  cd docker-compose/qa
+  cd k8s/docker-compose/qa
   docker-compose up -d
   ```
 
 - **Prod**: Production environment
   ```bash
-  cd docker-compose/prod
+  cd k8s/docker-compose/prod
   docker-compose up -d
   ```
 
@@ -91,13 +91,13 @@ You can also deploy to Kubernetes using Helm charts:
 
 ```bash
 # Deploy development environment
-helm install eazybank-dev ./helm/environments/dev-env
+helm install eazybank-dev .k8s/helm/environments/dev-env
 
 # Deploy QA environment
-helm install eazybank-qa ./helm/environments/qa-env
+helm install eazybank-qa .k8s/helm/environments/qa-env
 
 # Deploy production environment
-helm install eazybank-prod ./helm/environments/prod-env
+helm install eazybank-prod .k8s/helm/environments/prod-env
 ```
 
 ## Development and Debugging
@@ -171,20 +171,25 @@ helm install eazybank-prod ./helm/environments/prod-env
 
 ```
 easy-bank-msa-maven/
-├── account/                  # Account service
-├── card/                     # Card service
-├── config-server/            # Configuration server
-├── docker-compose/           # Docker Compose configurations
-│   ├── default/              # Default environment
-│   ├── dev/                  # Development environment
-│   ├── qa/                   # QA environment
-│   └── prod/                 # Production environment
-├── eureka-server/            # Service discovery
-├── gateway-server/           # API gateway
-├── helm/                     # Kubernetes Helm charts
-├── loan/                     # Loan service
-├── message/                  # Message service
-├── microservice-config/      # Microservice configurations
-├── microservice-k8s-config/  # Kubernetes configurations
-└── parent/                   # Parent POM
+├── apps/                     # Application services
+│   ├── account/              # Account service
+│   ├── card/                 # Card service
+│   ├── config-server/        # Configuration server
+│   ├── eureka-server/        # Service discovery
+│   ├── gateway-server/       # API gateway
+│   ├── loan/                 # Loan service
+│   ├── message/              # Message service
+│   └── parent/               # Parent POM
+└── k8s/                      # Kubernetes and infrastructure configurations
+    ├── docker-compose/       # Docker Compose configurations
+    │   ├── debezium/         # Debezium environment
+    │   ├── default/          # Default environment
+    │   ├── dev/              # Development environment
+    │   ├── observability/    # Observability stack environment
+    │   ├── prod/             # Production environment
+    │   └── qa/               # QA environment
+    ├── helm/                 # Kubernetes Helm charts
+    ├── kubernetes/           # Kubernetes configurations
+    ├── microservice-config/  # Microservice configurations
+    └── microservice-k8s-config/ # Kubernetes microservice configurations
 ```
