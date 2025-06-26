@@ -10,8 +10,8 @@ import io.github.songminkyu.accounthex.domain.model.dto.AccountDTO;
 import io.github.songminkyu.accounthex.domain.model.dto.AccountsMsgDTO;
 import io.github.songminkyu.accounthex.domain.model.dto.CustomerDTO;
 import io.github.songminkyu.accounthex.domain.port.api.AccountService;
-import io.github.songminkyu.accounthex.domain.port.spi.AccountRepository;
-import io.github.songminkyu.accounthex.domain.port.spi.CustomerRepository;
+import io.github.songminkyu.accounthex.domain.port.repository.AccountRepository;
+import io.github.songminkyu.accounthex.domain.port.repository.CustomerRepository;
 import io.github.songminkyu.accounthex.domain.port.spi.MessageSender;
 import io.github.songminkyu.accounthex.domain.port.spi.DomainLogger;
 

@@ -10,8 +10,8 @@ import io.github.songminkyu.accounthex.domain.model.dto.CardDTO;
 import io.github.songminkyu.accounthex.domain.model.dto.CustomerDetailsDTO;
 import io.github.songminkyu.accounthex.domain.model.dto.LoanDTO;
 import io.github.songminkyu.accounthex.domain.port.api.CustomerService;
-import io.github.songminkyu.accounthex.domain.port.spi.AccountRepository;
-import io.github.songminkyu.accounthex.domain.port.spi.CustomerRepository;
+import io.github.songminkyu.accounthex.domain.port.repository.AccountRepository;
+import io.github.songminkyu.accounthex.domain.port.repository.CustomerRepository;
 import io.github.songminkyu.accounthex.domain.port.spi.CardClient;
 import io.github.songminkyu.accounthex.domain.port.spi.LoanClient;
 

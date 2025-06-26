@@ -1,4 +1,4 @@
-package io.github.songminkyu.accounthex.domain.port.spi;
+package io.github.songminkyu.accounthex.domain.port.repository;
 
 import io.github.songminkyu.accounthex.domain.model.Account;
 
