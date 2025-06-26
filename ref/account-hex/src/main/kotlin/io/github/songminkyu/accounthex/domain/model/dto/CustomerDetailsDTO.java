@@ -155,4 +155,5 @@ public class CustomerDetailsDTO {
                 ", cards=" + cards +
                 ", loans=" + loans +
                 '}';
+    }
 }
