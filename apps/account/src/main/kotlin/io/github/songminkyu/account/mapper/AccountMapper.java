@@ -10,7 +10,6 @@ import org.mapstruct.Mapping;
 @Mapper(uses = AccountMappingUtil.class)
 public interface AccountMapper extends EntityMapper<AccountDTO, Account> {
 
-
     @Mapping(source = ".", target = "accountNumber", qualifiedBy = AccountMappingUtil.AccountNumber.class)
     @Mapping(source = ".", target = "accountType", qualifiedBy = AccountMappingUtil.AccountType.class)
     @Mapping(source = ".", target = "branchAddress", qualifiedByName = "branchAddress")
