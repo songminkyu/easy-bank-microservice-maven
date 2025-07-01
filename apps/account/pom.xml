@@ -14,18 +14,18 @@
     <packaging>jar</packaging>
     <name>account</name>
     <description>account</description>
-    <url>https://github.com/songminkyu/spring-boot-microservice-sample/</url>
+    <url>https://github.com/songminkyu/easy-bank-msa-maven/</url>
 
     <developers>
         <developer>
-            <name>Şuayb Şimşek</name>
-            <email>suaybsimsek58@gmail.com</email>
+            <name>songminkyu</name>
+            <email>song600min@gmail.com</email>
         </developer>
     </developers>
 
     <scm>
-        <url>https://github.com/songminkyu/spring-boot-microservice-sample.git</url>
-        <connection>scm:git:https://github.com/songminkyu/spring-boot-microservice-sample.git</connection>
+        <url>https://github.com/songminkyu/easy-bank-msa-maven.git</url>
+        <connection>scm:git:https://github.com/songminkyu/easy-bank-msa-maven.git</connection>
         <tag>HEAD</tag>
     </scm>
 

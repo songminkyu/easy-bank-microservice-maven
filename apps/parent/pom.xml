@@ -15,18 +15,18 @@
     <packaging>pom</packaging>
     <name>parent</name>
     <description>parent</description>
-    <url>https://github.com/songminkyu/spring-boot-microservice-sample/</url>
+    <url>https://github.com/songminkyu/easy-bank-msa-maven/</url>
 
     <developers>
         <developer>
-            <name>Şuayb Şimşek</name>
-            <email>suaybsimsek58@gmail.com</email>
+            <name>songminkyu</name>
+            <email>song600min@gmail.com</email>
         </developer>
     </developers>
 
     <scm>
-        <url>https://github.com/songminkyu/spring-boot-microservice-sample.git</url>
-        <connection>scm:git:https://github.com/songminkyu/spring-boot-microservice-sample.git</connection>
+        <url>https://github.com/songminkyu/easy-bank-msa-maven.git</url>
+        <connection>scm:git:https://github.com/songminkyu/easy-bank-msa-maven.git</connection>
         <tag>HEAD</tag>
     </scm>
 
@@ -46,7 +46,7 @@
         <loki-logback.version>1.5.1</loki-logback.version>
         <jib-maven-plugin.version>3.4.1</jib-maven-plugin.version>
         <jib-maven-plugin.architecture>amd64</jib-maven-plugin.architecture>
-        <jib.from.image>eclipse-temurin:17-jre-focal</jib.from.image>
+        <jib.from.image>eclipse-temurin:21-jre-focal</jib.from.image>
         <checkstyle.version>10.14.2</checkstyle.version>
         <detekt.version>1.23.6</detekt.version>
         <maven-enforcer-plugin.version>3.4.1</maven-enforcer-plugin.version>
@@ -154,7 +154,7 @@
                             </platforms>
                         </from>
                         <to>
-                            <image>suayb/${project.artifactId}:s17</image>
+                            <image>songminkyu/${project.artifactId}:s21</image>
                         </to>
                     </configuration>
                 </plugin>

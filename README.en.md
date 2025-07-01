@@ -193,3 +193,6 @@ easy-bank-msa-maven/
     ├── microservice-config/  # Microservice configurations
     └── microservice-k8s-config/ # Kubernetes microservice configurations
 ```
+
+## Reference
+[spring-boot-microservice-sample](https://github.com/susimsek/spring-boot-microservice-sample.git)

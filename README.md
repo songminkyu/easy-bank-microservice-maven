@@ -193,3 +193,8 @@ easy-bank-msa-maven
     ├── microservice-config/  # 마이크로서비스 구성
     └── microservice-k8s-config/ # Kubernetes 마이크로서비스 구성
 ```
+
+## 참고
+[spring-boot-microservice-sample](https://github.com/susimsek/spring-boot-microservice-sample.git)
+
+
