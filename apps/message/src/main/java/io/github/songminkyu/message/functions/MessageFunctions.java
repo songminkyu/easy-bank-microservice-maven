@@ -2,9 +2,11 @@ package io.github.songminkyu.message.functions;
 
 import io.github.songminkyu.message.dto.AccountsMsgDTO;
 import io.github.songminkyu.message.dto.DltMessageDTO;
+import io.github.songminkyu.message.event.RetryMessageEvent;
+import io.github.songminkyu.message.event.RetryResultEvent;
 import io.github.songminkyu.message.monitoring.DltMetrics;
 import io.github.songminkyu.message.service.DltAlertService;
-import io.github.songminkyu.message.service.DltRetryService;
+import io.github.songminkyu.message.service.MessageRetryService;
 import io.github.songminkyu.message.strategy.AlertStrategyManager;
 import io.github.songminkyu.message.strategy.DltProcessingResult;
 import io.github.songminkyu.message.strategy.DltStrategyManager;
@@ -17,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.EventListener;
 import org.springframework.messaging.Message;
 
 @Configuration
@@ -28,7 +31,7 @@ public class MessageFunctions {
     private final DltAlertService dltAlertService;
     private final DltStrategyManager dltStrategyManager;
     private final AlertStrategyManager alertStrategyManager;
-    private final DltRetryService dltRetryService;
+    private final MessageRetryService messageRetryService;
 
     @Bean
     public Function<AccountsMsgDTO, AccountsMsgDTO> email() {
@@ -145,8 +148,8 @@ public class MessageFunctions {
                 log.info("Message retry scheduled for account {} with delay {}ms",
                         dltMessage.originalMessage().accountNumber(),
                         processingResult.retryDelayMs());
-                // Schedule the retry using the retry service
-                dltRetryService.scheduleRetry(dltMessage, processingResult);
+                // Schedule the retry using the message retry service
+                messageRetryService.scheduleRetry(dltMessage, processingResult);
             }
             case MANUAL_INTERVENTION_REQUIRED -> {
                 log.warn("Manual intervention required for account {}: {}",

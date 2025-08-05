@@ -2,11 +2,15 @@ package io.github.songminkyu.message.service;
 
 import io.github.songminkyu.message.dto.AccountsMsgDTO;
 import io.github.songminkyu.message.dto.DltMessageDTO;
+import io.github.songminkyu.message.event.RetryMessageEvent;
+import io.github.songminkyu.message.event.RetryResultEvent;
 import io.github.songminkyu.message.strategy.DltProcessingResult;
 import io.github.songminkyu.message.strategy.DltStrategyManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.scheduling.TaskScheduler;
@@ -15,7 +19,6 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
-import java.util.function.Function;
 
 /**
  * Service for handling scheduled retries of DLT messages
@@ -28,8 +31,7 @@ public class DltRetryService {
 
     private final TaskScheduler taskScheduler;
     private final StreamBridge streamBridge;
-    private final Function<AccountsMsgDTO, AccountsMsgDTO> emailProcessor;
-    private final Function<AccountsMsgDTO, Long> smsProcessor;
+    private final ApplicationEventPublisher eventPublisher;
     private final DltStrategyManager dltStrategyManager;
     
     private final ConcurrentHashMap<String, ScheduledFuture<?>> scheduledRetries = new ConcurrentHashMap<>();
@@ -128,21 +130,28 @@ public class DltRetryService {
             AccountsMsgDTO originalMessage = dltMessage.originalMessage();
             boolean retrySuccessful = false;
             
-            // Strategy 1: Direct processing retry
+            // Strategy 1: Event-based processing retry
             try {
-                log.debug("Attempting direct processing retry for account: {}", originalMessage.accountNumber());
+                log.debug("Publishing retry event for account: {}", originalMessage.accountNumber());
                 
-                // Try processing with both email and SMS functions
-                AccountsMsgDTO emailResult = emailProcessor.apply(originalMessage);
-                Long smsResult = smsProcessor.apply(originalMessage);
+                // Publish retry event for MessageFunctions to handle
+                RetryMessageEvent retryEvent = new RetryMessageEvent(
+                    this, 
+                    originalMessage, 
+                    "Scheduled retry from DLT", 
+                    dltMessage.attemptCount() + 1,
+                    retryKey
+                );
                 
-                log.info("Direct retry successful for account {}: email={}, sms={}",
-                        originalMessage.accountNumber(), emailResult != null, smsResult != null);
+                eventPublisher.publishEvent(retryEvent);
+                log.info("Retry event published for account {}", originalMessage.accountNumber());
+                
+                // For now, assume success - actual result will be handled via RetryResultEvent
                 retrySuccessful = true;
                 
-            } catch (Exception directRetryException) {
-                log.warn("Direct processing retry failed for account {}: {}", 
-                        originalMessage.accountNumber(), directRetryException.getMessage());
+            } catch (Exception eventException) {
+                log.warn("Event-based retry failed for account {}: {}", 
+                        originalMessage.accountNumber(), eventException.getMessage());
                 
                 // Strategy 2: Re-publish to original topic
                 try {
