@@ -15,12 +15,16 @@ import io.micrometer.core.instrument.Timer;
 import java.net.SocketTimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Function;
+
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.Message;
+import org.springframework.cloud.function.context.FunctionCatalog;
+import org.springframework.context.ApplicationContext;
 
 @Configuration
 @RequiredArgsConstructor
@@ -33,32 +37,60 @@ public class MessageFunctions {
     private final AlertStrategyManager alertStrategyManager;
     private final MessageRetryService messageRetryService;
 
+    @PostConstruct
+    public void init() {
+        log.info("🚀 MessageFunctions initialized - email, sms, handleDltMessage beans will be created");
+    }
+
     @Bean
     public Function<AccountsMsgDTO, AccountsMsgDTO> email() {
+        log.info("🔧 Creating email() Function bean");
         return accountsMsgDto -> {
             try {
-                log.info("★ Sending email with the details ★ : " + accountsMsgDto.toString());
-
-                // Simulate potential email service failure for demonstration
-                if (accountsMsgDto.accountNumber() == null) {
-                    throw new IllegalArgumentException("Account number cannot be null for email processing");
+                log.info("★ Processing email for account: {} ★", accountsMsgDto.accountNumber());
+                
+                // Validate input data - these are permanent failures (no retry)
+                if (accountsMsgDto.email() == null || accountsMsgDto.email().trim().isEmpty()) {
+                    throw new IllegalArgumentException("Email address cannot be null or empty - permanent failure");
                 }
-
+                if (accountsMsgDto.accountNumber() == null) {
+                    throw new IllegalArgumentException("Account number cannot be null for email processing - permanent failure");
+                }
+                
+                // For testing: Force exception to test DLQ behavior
+                // Comment out the next line in production
+                //throw new IllegalArgumentException("TESTING: Forced exception to verify DLQ behavior");
+                
+                // Simulate email service call that might fail temporarily
+                // if (someExternalServiceDown()) {
+                //     throw new SocketTimeoutException("Email service temporarily unavailable - will retry");
+                // }
+                
                 // Email processing logic here
-                log.info("Email sent successfully to: {}", accountsMsgDto.email());
-                return accountsMsgDto;
+                // log.info("Email sent successfully to: {}", accountsMsgDto.email());
+                 return accountsMsgDto;
 
+            } catch (IllegalArgumentException | NullPointerException e) {
+                // Permanent failures - log and let Spring handle DLQ routing
+                log.error("🔥 Permanent failure - this should trigger DLQ routing. Account: {}, Error: {}", 
+                        accountsMsgDto.accountNumber(), e.getMessage());
+                log.debug("📋 Exception details: Type={}, Message={}", e.getClass().getSimpleName(), e.getMessage());
+                dltMetrics.recordMessageFailure("email", e.getClass().getSimpleName());
+                throw e; // Rethrow as-is for DLQ routing
+                
             } catch (Exception e) {
-                log.error("Failed to send email for account: {}, error: {}",
+                // Unexpected exceptions - treat as permanent failure
+                log.error("Unexpected error - sending to DLQ. Account: {}, Error: {}",
                         accountsMsgDto.accountNumber(), e.getMessage());
                 dltMetrics.recordMessageFailure("email", e.getClass().getSimpleName());
-                throw new RuntimeException("Email processing failed: " + e.getMessage(), e);
+                throw new IllegalArgumentException("Unexpected error in email processing: " + e.getMessage(), e);
             }
         };
     }
 
     @Bean
     public Function<AccountsMsgDTO, Long> sms() {
+        log.info("🔧 Creating sms() Function bean");
         return accountsMsgDto -> {
             try {
                 log.info("Sending sms with the details : " + accountsMsgDto.toString());
@@ -83,7 +115,9 @@ public class MessageFunctions {
 
     @Bean
     public Consumer<Message<AccountsMsgDTO>> handleDltMessage() {
+        log.info("🔧 handleDltMessage bean created successfully!");
         return message -> {
+            log.error("🚨 DLT MESSAGE RECEIVED! Starting DLT processing...");
             Timer.Sample sample = dltMetrics.startDltProcessingTimer();
             String outcome = "success";
 
