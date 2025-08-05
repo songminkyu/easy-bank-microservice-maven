@@ -27,9 +27,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.doReturn;
 
-@DisplayName("DLT Retry Service Tests")
+@DisplayName("DLT Retry Service Enhanced Tests")
 @ExtendWith({MockitoExtension.class, OutputCaptureExtension.class})
-class DltRetryServiceTest {
+class DltRetryServiceEnhancedTest {
 
     @Mock
     private TaskScheduler taskScheduler;
@@ -57,140 +57,8 @@ class DltRetryServiceTest {
     }
 
     @Test
-    @DisplayName("재시도 스케줄링 성공 테스트")
-    void shouldScheduleRetrySuccessfully(CapturedOutput output) {
-        // Given
-        AccountsMsgDTO originalMessage = new AccountsMsgDTO(123456789L, "Test User", "test@example.com", "1234567890");
-        DltMessageDTO dltMessage = new DltMessageDTO(
-            originalMessage,
-            "Temporary failure",
-            "SocketTimeoutException",
-            LocalDateTime.now(),
-            1,
-            "Network timeout"
-        );
-        
-        DltProcessingResult processingResult = DltProcessingResult.retry(
-            "TransientErrorDltStrategy",
-            "Retry scheduled",
-            30000L
-        );
-
-        doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(Instant.class));
-
-        // When
-        dltRetryService.scheduleRetry(dltMessage, processingResult);
-
-        // Then
-        verify(taskScheduler).schedule(any(Runnable.class), any(Instant.class));
-        assertThat(output.getOut()).contains("Scheduling retry for account 123456789 with delay 30000ms");
-        assertThat(dltRetryService.getScheduledRetryCount()).isEqualTo(1);
-        assertThat(dltRetryService.isRetryScheduled(dltMessage)).isTrue();
-    }
-
-    @Test
-    @DisplayName("재시도 불필요한 경우 스케줄링 건너뛰기")
-    void shouldSkipSchedulingWhenRetryNotRequested(CapturedOutput output) {
-        // Given
-        AccountsMsgDTO originalMessage = new AccountsMsgDTO(123456789L, "Test User", "test@example.com", "1234567890");
-        DltMessageDTO dltMessage = new DltMessageDTO(
-            originalMessage,
-            "Permanent failure",
-            "IllegalArgumentException",
-            LocalDateTime.now(),
-            1,
-            "Validation failed"
-        );
-        
-        DltProcessingResult processingResult = DltProcessingResult.permanentFailure(
-            "PermanentErrorDltStrategy",
-            "Permanent failure",
-            null
-        );
-
-        // When
-        dltRetryService.scheduleRetry(dltMessage, processingResult);
-
-        // Then
-        verify(taskScheduler, never()).schedule(any(Runnable.class), any(Instant.class));
-        assertThat(output.getOut()).contains("Retry not requested for message: account=123456789");
-        assertThat(dltRetryService.getScheduledRetryCount()).isEqualTo(0);
-    }
-
-    @Test
-    @DisplayName("기존 스케줄된 재시도 취소 후 새로운 재시도 스케줄링")
-    void shouldCancelExistingRetryBeforeSchedulingNew(CapturedOutput output) {
-        // Given
-        AccountsMsgDTO originalMessage = new AccountsMsgDTO(123456789L, "Test User", "test@example.com", "1234567890");
-        DltMessageDTO dltMessage = new DltMessageDTO(
-            originalMessage,
-            "Temporary failure",
-            "SocketTimeoutException",
-            LocalDateTime.now(),
-            1,
-            "Network timeout"
-        );
-        
-        DltProcessingResult processingResult = DltProcessingResult.retry(
-            "TransientErrorDltStrategy",
-            "Retry scheduled",
-            30000L
-        );
-
-        doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(Instant.class));
-        when(scheduledFuture.isDone()).thenReturn(false);
-
-        // When - Schedule first retry
-        dltRetryService.scheduleRetry(dltMessage, processingResult);
-        
-        // When - Schedule second retry for same message
-        dltRetryService.scheduleRetry(dltMessage, processingResult);
-
-        // Then
-        verify(taskScheduler, times(2)).schedule(any(Runnable.class), any(Instant.class));
-        verify(scheduledFuture).cancel(false); // Previous retry should be cancelled
-        assertThat(dltRetryService.getScheduledRetryCount()).isEqualTo(1); // Only one active retry
-    }
-
-    @Test
-    @DisplayName("재시도 취소 테스트")
-    void shouldCancelScheduledRetry() {
-        // Given
-        AccountsMsgDTO originalMessage = new AccountsMsgDTO(123456789L, "Test User", "test@example.com", "1234567890");
-        DltMessageDTO dltMessage = new DltMessageDTO(
-            originalMessage,
-            "Temporary failure",
-            "SocketTimeoutException",
-            LocalDateTime.now(),
-            1,
-            "Network timeout"
-        );
-        
-        DltProcessingResult processingResult = DltProcessingResult.retry(
-            "TransientErrorDltStrategy",
-            "Retry scheduled",
-            30000L
-        );
-
-        doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(Instant.class));
-        when(scheduledFuture.isDone()).thenReturn(false);
-
-        // Schedule a retry first
-        dltRetryService.scheduleRetry(dltMessage, processingResult);
-        assertThat(dltRetryService.getScheduledRetryCount()).isEqualTo(1);
-
-        // When
-        dltRetryService.cancelRetry(dltMessage);
-
-        // Then
-        verify(scheduledFuture).cancel(false);
-        assertThat(dltRetryService.getScheduledRetryCount()).isEqualTo(0);
-        assertThat(dltRetryService.isRetryScheduled(dltMessage)).isFalse();
-    }
-
-    @Test
-    @DisplayName("재시도 실행 테스트 - 직접 처리 성공")
-    void shouldExecuteScheduledRetryWithDirectProcessingSuccess(CapturedOutput output) {
+    @DisplayName("재시도 실행 테스트 - 직접 처리 실패 후 재발행 성공")
+    void shouldExecuteRetryWithRepublishAfterDirectProcessingFailure(CapturedOutput output) {
         // Given
         AccountsMsgDTO originalMessage = new AccountsMsgDTO(123456789L, "Test User", "test@example.com", "1234567890");
         DltMessageDTO dltMessage = new DltMessageDTO(
@@ -211,14 +79,12 @@ class DltRetryServiceTest {
         ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(Instant.class));
         
-        // Mock successful direct processing
-        when(emailProcessor.apply(originalMessage)).thenReturn(originalMessage);
-        when(smsProcessor.apply(originalMessage)).thenReturn(123456789L);
+        // Mock direct processing failure but successful republish
+        when(emailProcessor.apply(originalMessage)).thenThrow(new RuntimeException("Direct processing failed"));
+        when(streamBridge.send(eq("emailsms-out-0"), any())).thenReturn(true);
 
         // Schedule the retry
         dltRetryService.scheduleRetry(dltMessage, processingResult);
-
-        // Capture the scheduled runnable
         verify(taskScheduler).schedule(runnableCaptor.capture(), any(Instant.class));
         Runnable retryTask = runnableCaptor.getValue();
 
@@ -227,16 +93,16 @@ class DltRetryServiceTest {
 
         // Then
         assertThat(output.getOut()).contains("Executing scheduled retry for account 123456789");
-        assertThat(output.getOut()).contains("Direct retry successful for account 123456789");
+        assertThat(output.getOut()).contains("Direct processing retry failed for account 123456789");
+        assertThat(output.getOut()).contains("Message successfully re-published to original topic");
         assertThat(output.getOut()).contains("Retry executed successfully for account 123456789");
         
-        verify(emailProcessor).apply(originalMessage);
-        verify(smsProcessor).apply(originalMessage);
+        verify(streamBridge).send(eq("emailsms-out-0"), any());
     }
-
+    
     @Test
-    @DisplayName("재시도 실행 중 예외 처리 테스트")
-    void shouldHandleExceptionDuringRetryExecution(CapturedOutput output) {
+    @DisplayName("재시도 실행 중 모든 전략 실패 테스트")
+    void shouldHandleAllRetryStrategiesFailure(CapturedOutput output) {
         // Given
         AccountsMsgDTO originalMessage = new AccountsMsgDTO(123456789L, "Test User", "test@example.com", "1234567890");
         DltMessageDTO dltMessage = new DltMessageDTO(
@@ -256,43 +122,164 @@ class DltRetryServiceTest {
 
         ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(Instant.class));
+        
+        // Mock all processing methods to fail
+        when(emailProcessor.apply(originalMessage)).thenThrow(new RuntimeException("Email processing failed"));
+        when(streamBridge.send(eq("emailsms-out-0"), any())).thenReturn(false);
+        
+        // Mock strategy manager to return no further retries
+        DltProcessingResult noRetryResult = DltProcessingResult.permanentFailure(
+            "PermanentErrorDltStrategy",
+            "Max retries exceeded",
+            null
+        );
+        when(dltStrategyManager.processDltMessage(any())).thenReturn(noRetryResult);
 
         // Schedule the retry
         dltRetryService.scheduleRetry(dltMessage, processingResult);
         verify(taskScheduler).schedule(runnableCaptor.capture(), any(Instant.class));
-
-        // When - Execute the retry task (this will complete normally as it just logs)
         Runnable retryTask = runnableCaptor.getValue();
+
+        // When - Execute the retry task
         retryTask.run();
 
         // Then
         assertThat(output.getOut()).contains("Executing scheduled retry for account 123456789");
-        assertThat(output.getOut()).contains("Retry executed successfully for account 123456789");
+        assertThat(output.getOut()).contains("All retry strategies failed for account 123456789");
+        assertThat(output.getOut()).contains("No more retries scheduled for account 123456789");
+        
+        verify(dltStrategyManager).processDltMessage(any(DltMessageDTO.class));
+    }
+    
+    @Test
+    @DisplayName("재시도 실패 후 추가 재시도 스케줄링 테스트")
+    void shouldScheduleAdditionalRetryAfterFailure(CapturedOutput output) {
+        // Given
+        AccountsMsgDTO originalMessage = new AccountsMsgDTO(123456789L, "Test User", "test@example.com", "1234567890");
+        DltMessageDTO dltMessage = new DltMessageDTO(
+            originalMessage,
+            "Temporary failure",
+            "SocketTimeoutException",
+            LocalDateTime.now(),
+            1,
+            "Network timeout"
+        );
+        
+        DltProcessingResult processingResult = DltProcessingResult.retry(
+            "TransientErrorDltStrategy",
+            "Retry scheduled",
+            30000L
+        );
+
+        ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
+        doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(Instant.class));
+        
+        // Mock all processing methods to fail
+        when(emailProcessor.apply(originalMessage)).thenThrow(new RuntimeException("Processing failed"));
+        when(streamBridge.send(eq("emailsms-out-0"), any())).thenReturn(false);
+        
+        // Mock strategy manager to return another retry
+        DltProcessingResult anotherRetryResult = DltProcessingResult.retry(
+            "TransientErrorDltStrategy",
+            "Another retry scheduled",
+            60000L
+        );
+        when(dltStrategyManager.processDltMessage(any())).thenReturn(anotherRetryResult);
+
+        // Schedule the initial retry
+        dltRetryService.scheduleRetry(dltMessage, processingResult);
+        verify(taskScheduler).schedule(runnableCaptor.capture(), any(Instant.class));
+        Runnable retryTask = runnableCaptor.getValue();
+
+        // When - Execute the retry task
+        retryTask.run();
+
+        // Then
+        assertThat(output.getOut()).contains("Executing scheduled retry for account 123456789");
+        assertThat(output.getOut()).contains("All retry strategies failed for account 123456789");
+        assertThat(output.getOut()).contains("Scheduling another retry for account 123456789 with delay 60000ms");
+        
+        // Verify that another retry was scheduled
+        verify(taskScheduler, times(2)).schedule(any(Runnable.class), any(Instant.class));
+        verify(dltStrategyManager).processDltMessage(any(DltMessageDTO.class));
     }
 
     @Test
-    @DisplayName("다중 메시지 재시도 스케줄링 테스트")
-    void shouldHandleMultipleRetrySchedules(CapturedOutput output) {
+    @DisplayName("재시도 메트릭스 기록 테스트")
+    void shouldRecordRetryMetrics(CapturedOutput output) {
         // Given
-        AccountsMsgDTO message1 = new AccountsMsgDTO(111111111L, "User One", "user1@test.com", "1111111111");
-        AccountsMsgDTO message2 = new AccountsMsgDTO(222222222L, "User Two", "user2@test.com", "2222222222");
+        AccountsMsgDTO originalMessage = new AccountsMsgDTO(555666777L, "Metrics User", "metrics@test.com", "5556667777");
+        DltMessageDTO dltMessage = new DltMessageDTO(
+            originalMessage,
+            "Service timeout",
+            "TimeoutException",
+            LocalDateTime.now(),
+            2,
+            "Service response timeout"
+        );
         
-        DltMessageDTO dltMessage1 = new DltMessageDTO(message1, "Error 1", "TimeoutException", LocalDateTime.now(), 1, "Timeout 1");
-        DltMessageDTO dltMessage2 = new DltMessageDTO(message2, "Error 2", "ConnectException", LocalDateTime.now(), 1, "Connection 2");
-        
-        DltProcessingResult result1 = DltProcessingResult.retry("Strategy1", "Retry 1", 30000L);
-        DltProcessingResult result2 = DltProcessingResult.retry("Strategy2", "Retry 2", 60000L);
+        DltProcessingResult processingResult = DltProcessingResult.retry(
+            "TransientErrorDltStrategy",
+            "Retry scheduled",
+            45000L
+        );
 
+        ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(Instant.class));
+        
+        // Mock successful direct processing
+        when(emailProcessor.apply(originalMessage)).thenReturn(originalMessage);
+        when(smsProcessor.apply(originalMessage)).thenReturn(555666777L);
 
-        // When
-        dltRetryService.scheduleRetry(dltMessage1, result1);
-        dltRetryService.scheduleRetry(dltMessage2, result2);
+        // Schedule the retry
+        dltRetryService.scheduleRetry(dltMessage, processingResult);
+        verify(taskScheduler).schedule(runnableCaptor.capture(), any(Instant.class));
+        Runnable retryTask = runnableCaptor.getValue();
+
+        // When - Execute the retry task
+        retryTask.run();
 
         // Then
-        verify(taskScheduler, times(2)).schedule(any(Runnable.class), any(Instant.class));
-        assertThat(dltRetryService.getScheduledRetryCount()).isEqualTo(2);
-        assertThat(dltRetryService.isRetryScheduled(dltMessage1)).isTrue();
-        assertThat(dltRetryService.isRetryScheduled(dltMessage2)).isTrue();
+        assertThat(output.getOut()).contains("Recording retry metrics: account=555666777, outcome=success, attemptCount=2");
+        assertThat(output.getOut()).contains("Retry executed successfully for account 555666777");
+    }
+
+    @Test
+    @DisplayName("크리티컬 에러 처리 및 메트릭스 기록 테스트")
+    void shouldHandleCriticalErrorAndRecordMetrics(CapturedOutput output) {
+        // Given
+        AccountsMsgDTO originalMessage = new AccountsMsgDTO(999888777L, "Critical User", "critical@test.com", "9998887777");
+        DltMessageDTO dltMessage = new DltMessageDTO(
+            originalMessage,
+            "Critical system failure",
+            "SystemException",
+            LocalDateTime.now(),
+            3,
+            "System down"
+        );
+        
+        DltProcessingResult processingResult = DltProcessingResult.retry(
+            "TransientErrorDltStrategy",
+            "Retry scheduled",
+            30000L
+        );
+
+        ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
+        doReturn(scheduledFuture).when(taskScheduler).schedule(any(Runnable.class), any(Instant.class));
+        
+        // Mock critical error during execution
+        when(emailProcessor.apply(originalMessage)).thenThrow(new OutOfMemoryError("Critical system error"));
+
+        // Schedule the retry
+        dltRetryService.scheduleRetry(dltMessage, processingResult);
+        verify(taskScheduler).schedule(runnableCaptor.capture(), any(Instant.class));
+        Runnable retryTask = runnableCaptor.getValue();
+
+        // When - Execute the retry task
+        retryTask.run();
+
+        // Then
+        assertThat(output.getOut()).contains("Critical error during retry execution for account 999888777");
+        assertThat(output.getOut()).contains("Recording retry metrics: account=999888777, outcome=critical_error, attemptCount=3");
     }
 }
