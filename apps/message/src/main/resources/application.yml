@@ -11,8 +11,10 @@ spring:
       enabled: always
   cloud:
     function:
-      definition: email|sms;handleDltMessage;
+      definition: email|sms;handleDltMessage
     stream:
+      default:
+        contentType: application/json
       bindings:
         emailsms-in-0:
           destination: send-communication
@@ -27,6 +29,7 @@ spring:
         handleDltMessage-in-0:
           destination: send-communication.message.dlq
           group: ${spring.application.name}-dlq
+          contentType: application/json
       kafka:
         bindings:
           emailsms-in-0:

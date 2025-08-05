@@ -25,6 +25,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.messaging.Message;
 import org.springframework.cloud.function.context.FunctionCatalog;
 import org.springframework.context.ApplicationContext;
+import org.springframework.messaging.MessageHeaders;
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 @RequiredArgsConstructor
@@ -59,7 +61,7 @@ public class MessageFunctions {
                 
                 // For testing: Force exception to test DLQ behavior
                 // Comment out the next line in production
-                //throw new IllegalArgumentException("TESTING: Forced exception to verify DLQ behavior");
+                throw new IllegalArgumentException("TESTING: Forced exception to verify DLQ behavior");
                 
                 // Simulate email service call that might fail temporarily
                 // if (someExternalServiceDown()) {
@@ -68,7 +70,7 @@ public class MessageFunctions {
                 
                 // Email processing logic here
                 // log.info("Email sent successfully to: {}", accountsMsgDto.email());
-                 return accountsMsgDto;
+                 //return accountsMsgDto;
 
             } catch (IllegalArgumentException | NullPointerException e) {
                 // Permanent failures - log and let Spring handle DLQ routing
@@ -118,6 +120,8 @@ public class MessageFunctions {
         log.info("🔧 handleDltMessage bean created successfully!");
         return message -> {
             log.error("🚨 DLT MESSAGE RECEIVED! Starting DLT processing...");
+            log.debug("📋 DLT Message headers: {}", message.getHeaders());
+            log.debug("📋 DLT Message payload type: {}", message.getPayload().getClass().getSimpleName());
             Timer.Sample sample = dltMetrics.startDltProcessingTimer();
             String outcome = "success";
 
@@ -129,10 +133,10 @@ public class MessageFunctions {
                         accountsMsgDto.email(),
                         accountsMsgDto.mobileNumber());
 
-                // Extract error information from headers
-                String errorMessage = (String) message.getHeaders().get("x-exception-message");
-                String exceptionClass = (String) message.getHeaders().get("x-exception-fqcn");
-                Integer attemptCount = (Integer) message.getHeaders().get("x-retry-count");
+                // Extract error information from headers - handle byte arrays safely
+                String errorMessage = getStringFromHeader(message.getHeaders(), "x-exception-message");
+                String exceptionClass = getStringFromHeader(message.getHeaders(), "x-exception-fqcn");
+                Integer attemptCount = getIntegerFromHeader(message.getHeaders(), "x-retry-count");
 
                 // Create DLT message DTO for comprehensive logging
                 DltMessageDTO dltMessage = new DltMessageDTO(
@@ -208,6 +212,49 @@ public class MessageFunctions {
                         dltMessage.originalMessage().accountNumber());
             }
         }
+    }
+
+    // Helper methods for safe header access
+    private String getStringFromHeader(MessageHeaders headers, String headerName) {
+        Object value = headers.get(headerName);
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof String) {
+            return (String) value;
+        }
+        if (value instanceof byte[]) {
+            return new String((byte[]) value, StandardCharsets.UTF_8);
+        }
+        return value.toString();
+    }
+
+    private Integer getIntegerFromHeader(MessageHeaders headers, String headerName) {
+        Object value = headers.get(headerName);
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Integer) {
+            return (Integer) value;
+        }
+        if (value instanceof String) {
+            try {
+                return Integer.parseInt((String) value);
+            } catch (NumberFormatException e) {
+                log.warn("Cannot parse header {} as integer: {}", headerName, value);
+                return null;
+            }
+        }
+        if (value instanceof byte[]) {
+            try {
+                String strValue = new String((byte[]) value, StandardCharsets.UTF_8);
+                return Integer.parseInt(strValue);
+            } catch (NumberFormatException e) {
+                log.warn("Cannot parse header {} as integer from bytes: {}", headerName, value);
+                return null;
+            }
+        }
+        return null;
     }
 
 }

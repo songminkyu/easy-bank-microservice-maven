@@ -1,0 +1,40 @@
+spring:
+  cloud:
+    stream:
+      bindings:
+        emailsms-in-0:
+          consumer:
+            maxAttempts: 5  # Production: Enable retries for resilience
+            backOffInitialInterval: 2000
+            backOffMaxInterval: 10000
+            backOffMultiplier: 2.0
+
+# Production DLT Configuration
+app:
+  dlt:
+    exception-handling:
+      test-mode: false  # Production: Use normal retry behavior
+      immediate-dlq-exceptions:  # Still send these directly to DLQ
+        - "IllegalArgumentException"
+        - "ValidationException"
+        - "NullPointerException"
+        - "DataIntegrityViolationException"
+        - "SecurityException"
+        - "AuthenticationException"
+        - "AuthorizationException"
+      retry-enabled-exceptions:  # These will trigger retries in production
+        - "SocketTimeoutException"
+        - "ConnectException"
+        - "ServiceUnavailableException"
+        - "HttpServerErrorException"
+        - "ResourceAccessException"
+        - "TemporaryFailureException"
+    retry-strategy:
+      max-dlt-retry-attempts: 3  # More retries in production
+      base-retry-delay-ms: 60000  # 1 minute base delay
+      backoff-multiplier: 2.0
+      max-retry-delay-ms: 600000  # 10 minutes max delay
+
+logging:
+  level:
+    io.github.songminkyu.message: DEBUG  # More detailed logging in production

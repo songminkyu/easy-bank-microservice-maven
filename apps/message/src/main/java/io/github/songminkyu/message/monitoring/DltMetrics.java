@@ -27,11 +27,11 @@ public class DltMetrics {
      */
     public void recordDltMessage(DltMessageDTO dltMessage) {
         Counter.builder(DLT_COUNTER_NAME)
-            .tag("exception.class", dltMessage.exceptionClass())
-            .tag("account.number", String.valueOf(dltMessage.originalMessage().accountNumber()))
-            .description("Number of messages sent to DLT")
-            .register(meterRegistry)
-            .increment();
+                .tag("exception.class", dltMessage.exceptionClass())
+                .tag("account.number", String.valueOf(dltMessage.originalMessage().accountNumber()))
+                .description("Number of messages sent to DLT")
+                .register(meterRegistry)
+                .increment();
 
         log.debug("DLT metric recorded for account: {}", dltMessage.originalMessage().accountNumber());
     }
