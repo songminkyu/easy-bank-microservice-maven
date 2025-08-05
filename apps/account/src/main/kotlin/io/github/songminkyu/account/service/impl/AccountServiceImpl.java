@@ -39,6 +39,15 @@ public class AccountServiceImpl implements AccountService {
     private final StreamBridge streamBridge;
 
     @Override
+    public void test() {
+        var accountsMsgDTO = new AccountsMsgDTO(123123L, "pasongsoso",
+                "test@naver.com","040440");
+        log.info("Sending Communication request for the details: {}", accountsMsgDTO);
+        var result = streamBridge.send("sendCommunication-out-0", accountsMsgDTO);
+        log.info("Is the Communication request successfully triggered ? : {}", result);
+    }
+
+    @Override
     @Async
     public CompletableFuture<Void> createAccount(CustomerDTO customer) {
         if (customerRepository.existsByMobileNumber(customer.mobileNumber())) {

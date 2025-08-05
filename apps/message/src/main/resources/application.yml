@@ -17,8 +17,28 @@ spring:
         emailsms-in-0:
           destination: send-communication
           group: ${spring.application.name}
+          consumer:
+            maxAttempts: 3
+            backOffInitialInterval: 1000
+            backOffMaxInterval: 5000
+            backOffMultiplier: 2.0
         emailsms-out-0:
           destination: communication-sent
+        handleDltMessage-in-0:
+          destination: send-communication.message.dlq
+          group: ${spring.application.name}-dlq
+      kafka:
+        bindings:
+          emailsms-in-0:
+            consumer:
+              enableDlq: true
+              dlqName: send-communication.message.dlq
+              ack-mode: MANUAL
+              resetOffsets: false
+        binder:
+          brokers: localhost:9092
+          autoCreateTopics: true
+          autoAddPartitions: true
   rabbitmq:
     host: localhost
     port: 5672
@@ -28,9 +48,35 @@ spring:
   kafka:
     bootstrap-servers: http://localhost:9092
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    readiness-state:
+      enabled: true
+    liveness-state:
+      enabled: true
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        message.dlt.processing.time: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
 logging:
   level:
     ROOT: INFO
     io.github.songminkyu.message: INFO
+    org.springframework.cloud.stream: DEBUG
+    org.apache.kafka: INFO
   pattern:
     level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'

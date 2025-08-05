@@ -60,6 +60,12 @@ public class AccountController {
     @Value("${build.version}")
     private String buildVersion;
 
+    @GetMapping("/test")
+    public String test() {
+        accountService.test();
+        return "test";
+    }
+
     @SecurityRequirement(name = "auth")
     @Operation(
         summary = "Create Account REST API",

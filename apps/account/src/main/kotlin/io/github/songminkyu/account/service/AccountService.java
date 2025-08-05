@@ -20,4 +20,6 @@ public interface AccountService {
     void deleteAccount(String mobileNumber);
 
     boolean updateCommunicationStatus(Long accountNumber);
+
+    void test();
 }
