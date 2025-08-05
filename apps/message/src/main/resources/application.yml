@@ -18,7 +18,7 @@ spring:
           destination: send-communication
           group: ${spring.application.name}
           consumer:
-            maxAttempts: 3
+            maxAttempts: 5
             backOffInitialInterval: 1000
             backOffMaxInterval: 5000
             backOffMultiplier: 2.0
@@ -80,3 +80,57 @@ logging:
     org.apache.kafka: INFO
   pattern:
     level: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
+
+# DLT Processing Configuration
+app:
+  dlt:
+    critical-account:
+      account-threshold: 1000000000  # 10억 이상 계좌
+      immediate-escalation: true
+      require-manual-intervention: true
+    retry-strategy:
+      max-dlt-retry-attempts: 2
+      base-retry-delay-ms: 30000  # 30초
+      backoff-multiplier: 2.0
+      max-retry-delay-ms: 300000  # 5분
+      transient-error-types:
+        - "ConnectException"
+        - "SocketTimeoutException"
+        - "TimeoutException"
+        - "ServiceUnavailableException"
+        - "TemporaryFailureException"
+        - "CircuitBreakerOpenException"
+        - "HttpServerErrorException"
+        - "ResourceAccessException"
+    alert-config:
+      escalation-attempt-threshold: 5
+      pager-duty-enabled: false
+      slack-webhook-url: "${SLACK_WEBHOOK_URL:}"
+      email-recipients:
+        critical:
+          - "ops-team@company.com"
+          - "on-call@company.com"
+        standard:
+          - "dev-team@company.com"
+      jira-project-key: "OPS"
+    permanent-error:
+      permanent-error-types:
+        - "IllegalArgumentException"
+        - "ValidationException"
+        - "DataIntegrityViolationException"
+        - "AuthenticationException"
+        - "AuthorizationException"
+        - "BadRequestException"
+        - "SecurityException"
+        - "UnsupportedOperationException"
+        - "JsonProcessingException"
+      permanent-error-messages:
+        - "cannot be null"
+        - "invalid format"
+        - "validation failed"
+        - "unauthorized"
+        - "forbidden"
+        - "malformed"
+        - "corrupt"
+        - "invalid data"
+      archive-failures: true

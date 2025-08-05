@@ -4,7 +4,13 @@ import io.github.songminkyu.message.dto.AccountsMsgDTO;
 import io.github.songminkyu.message.dto.DltMessageDTO;
 import io.github.songminkyu.message.monitoring.DltMetrics;
 import io.github.songminkyu.message.service.DltAlertService;
+import io.github.songminkyu.message.service.DltRetryService;
+import io.github.songminkyu.message.strategy.AlertStrategyManager;
+import io.github.songminkyu.message.strategy.DltProcessingResult;
+import io.github.songminkyu.message.strategy.DltStrategyManager;
 import io.micrometer.core.instrument.Timer;
+
+import java.net.SocketTimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +26,9 @@ public class MessageFunctions {
 
     private final DltMetrics dltMetrics;
     private final DltAlertService dltAlertService;
+    private final DltStrategyManager dltStrategyManager;
+    private final AlertStrategyManager alertStrategyManager;
+    private final DltRetryService dltRetryService;
 
     @Bean
     public Function<AccountsMsgDTO, AccountsMsgDTO> email() {
@@ -103,8 +112,14 @@ public class MessageFunctions {
                 // Record metrics
                 dltMetrics.recordDltMessage(dltMessage);
 
-                // Handle DLT notification and alerting
-                handleDltNotification(dltMessage);
+                // Process DLT message using strategy pattern
+                DltProcessingResult processingResult = dltStrategyManager.processDltMessage(dltMessage);
+                
+                // Send alerts based on processing result
+                alertStrategyManager.sendAlert(dltMessage, processingResult);
+                
+                // Handle additional actions based on result
+                handleProcessingResult(dltMessage, processingResult);
 
             } catch (Exception e) {
                 outcome = "failure";
@@ -117,17 +132,44 @@ public class MessageFunctions {
         };
     }
 
-    private void handleDltNotification(DltMessageDTO dltMessage) {
-        log.warn("DLT Notification: Failed message for account {} after {} attempts. Error: {}",
+    private void handleProcessingResult(DltMessageDTO dltMessage, DltProcessingResult processingResult) {
+        log.info("DLT Processing completed for account {}: status={}, strategy={}, requiresIntervention={}",
                 dltMessage.originalMessage().accountNumber(),
-                dltMessage.attemptCount(),
-                dltMessage.errorMessage());
+                processingResult.status(),
+                processingResult.strategyUsed(),
+                processingResult.requiresManualIntervention());
 
-        // Send appropriate alerts based on failure severity
-        if (dltAlertService.isCriticalFailure(dltMessage)) {
-            dltAlertService.sendCriticalAlert(dltMessage);
-        } else {
-            dltAlertService.sendDltAlert(dltMessage);
+        // Handle specific actions based on processing result
+        switch (processingResult.status()) {
+            case RETRY_SCHEDULED -> {
+                log.info("Message retry scheduled for account {} with delay {}ms",
+                        dltMessage.originalMessage().accountNumber(),
+                        processingResult.retryDelayMs());
+                // Schedule the retry using the retry service
+                dltRetryService.scheduleRetry(dltMessage, processingResult);
+            }
+            case MANUAL_INTERVENTION_REQUIRED -> {
+                log.warn("Manual intervention required for account {}: {}",
+                        dltMessage.originalMessage().accountNumber(),
+                        processingResult.message());
+                // Additional tracking or workflow trigger could go here
+            }
+            case ESCALATED -> {
+                log.error("DLT processing escalated for account {}: {}",
+                        dltMessage.originalMessage().accountNumber(),
+                        processingResult.message());
+                // Emergency response procedures could be triggered here
+            }
+            case PERMANENT_FAILURE -> {
+                log.error("Permanent failure recorded for account {}: {}",
+                        dltMessage.originalMessage().accountNumber(),
+                        processingResult.message());
+                // Archive message to permanent failure store
+            }
+            case SUCCESS -> {
+                log.info("DLT processing completed successfully for account {}",
+                        dltMessage.originalMessage().accountNumber());
+            }
         }
     }
 
