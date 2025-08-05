@@ -1,9 +1,0 @@
-${AnsiColor.GREEN}███████╗ █████╗ ███████╗██╗   ██╗██████╗  █████╗ ███╗   ██╗██╗  ██╗
-${AnsiColor.GREEN}██╔════╝██╔══██╗╚══███╔╝╚██╗ ██╔╝██╔══██╗██╔══██╗████╗  ██║██║ ██╔╝
-${AnsiColor.GREEN}█████╗  ███████║  ███╔╝  ╚████╔╝ ██████╔╝███████║██╔██╗ ██║█████╔╝
-${AnsiColor.GREEN}██╔══╝  ██╔══██║ ███╔╝    ╚██╔╝  ██╔══██╗██╔══██║██║╚██╗██║██╔═██╗
-${AnsiColor.GREEN}███████╗██║  ██║███████╗   ██║   ██████╔╝██║  ██║██║ ╚████║██║  ██╗
-${AnsiColor.GREEN}╚══════╝╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝
-
-${AnsiColor.BRIGHT_BLUE}Startup profile(s) ${spring.profiles.active}
-Powered by Spring Boot ${spring-boot.version}${AnsiColor.DEFAULT}
