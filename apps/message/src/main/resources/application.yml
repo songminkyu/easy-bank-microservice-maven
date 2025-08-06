@@ -107,7 +107,8 @@ app:
         - "ResourceAccessException"
     alert-config:
       escalation-attempt-threshold: 5
-      pager-duty-enabled: false
+      pager-duty-enabled: false  # Set to true in production
+      jira-enabled: false        # Set to true when JIRA integration ready
       slack-webhook-url: "${SLACK_WEBHOOK_URL:}"
       email-recipients:
         critical:

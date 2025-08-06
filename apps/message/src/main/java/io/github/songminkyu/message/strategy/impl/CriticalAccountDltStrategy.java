@@ -1,8 +1,10 @@
 package io.github.songminkyu.message.strategy.impl;
 
+import io.github.songminkyu.message.config.DltConfiguration;
 import io.github.songminkyu.message.dto.DltMessageDTO;
 import io.github.songminkyu.message.strategy.DltProcessingResult;
 import io.github.songminkyu.message.strategy.DltProcessingStrategy;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -13,10 +15,11 @@ import java.util.List;
  * Applies immediate escalation and requires manual intervention
  */
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class CriticalAccountDltStrategy implements DltProcessingStrategy {
 
-    private static final long CRITICAL_ACCOUNT_THRESHOLD = 1000000000L; // 10억 이상
+    private final DltConfiguration dltConfiguration;
     private static final String STRATEGY_NAME = "CriticalAccountDltStrategy";
 
     @Override
@@ -45,7 +48,11 @@ public class CriticalAccountDltStrategy implements DltProcessingStrategy {
     @Override
     public boolean canHandle(DltMessageDTO dltMessage) {
         Long accountNumber = dltMessage.originalMessage().accountNumber();
-        return accountNumber != null && accountNumber > CRITICAL_ACCOUNT_THRESHOLD;
+        Long threshold = dltConfiguration.getCriticalAccount().getAccountThreshold();
+        
+        log.debug("Account {} critical check: threshold={}", accountNumber, threshold);
+        
+        return accountNumber != null && accountNumber > threshold;
     }
 
     @Override

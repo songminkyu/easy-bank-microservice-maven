@@ -61,7 +61,7 @@ public class MessageFunctions {
                 
                 // For testing: Force exception to test DLQ behavior
                 // Comment out the next line in production
-                // throw new IllegalArgumentException("TESTING: Forced exception to verify DLQ behavior");
+                //throw new IllegalArgumentException("TESTING: Forced exception to verify DLQ behavior");
                 
                 // Simulate email service call that might fail temporarily
                 // if (someExternalServiceDown()) {
