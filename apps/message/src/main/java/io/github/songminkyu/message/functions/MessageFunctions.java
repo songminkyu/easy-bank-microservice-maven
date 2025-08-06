@@ -61,7 +61,7 @@ public class MessageFunctions {
                 
                 // For testing: Force exception to test DLQ behavior
                 // Comment out the next line in production
-                throw new IllegalArgumentException("TESTING: Forced exception to verify DLQ behavior");
+                // throw new IllegalArgumentException("TESTING: Forced exception to verify DLQ behavior");
                 
                 // Simulate email service call that might fail temporarily
                 // if (someExternalServiceDown()) {
@@ -69,8 +69,8 @@ public class MessageFunctions {
                 // }
                 
                 // Email processing logic here
-                // log.info("Email sent successfully to: {}", accountsMsgDto.email());
-                 //return accountsMsgDto;
+                log.info("Email sent successfully to: {}", accountsMsgDto.email());
+                return accountsMsgDto;
 
             } catch (IllegalArgumentException | NullPointerException e) {
                 // Permanent failures - log and let Spring handle DLQ routing
