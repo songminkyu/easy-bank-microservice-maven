@@ -249,7 +249,7 @@ services:
 
   redis:
     container_name: redis
-    image: docker.io/bitnami/redis:7.0.13
+    image: docker.io/bitnamilegacy/redis:latest
     ports:
       - 6379:6379
     environment:
@@ -277,7 +277,7 @@ services:
       service: microservice-db-config
 
   kafka:
-    image: docker.io/bitnami/kafka:3.9.1
+    image: docker.io/bitnamilegacy/kafka:latest
     container_name: kafka
     ports:
       - 9092:9092
