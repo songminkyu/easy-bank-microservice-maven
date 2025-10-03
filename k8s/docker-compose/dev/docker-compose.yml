@@ -277,7 +277,7 @@ services:
       service: microservice-db-config
 
   kafka:
-    image: docker.io/bitnami/kafka:3.5.1
+    image: docker.io/bitnami/kafka:3.9.1
     container_name: kafka
     ports:
       - 9092:9092
