@@ -1,0 +1,56 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9095
+
+memberlist:
+  join_members:
+    - loki:7946
+
+schema_config:
+  configs:
+    - from: 2021-08-01
+      store: tsdb
+      object_store: s3
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+common:
+  path_prefix: /loki
+  replication_factor: 1
+  storage:
+    s3:
+      endpoint: minio:9000
+      insecure: true
+      bucketnames: loki-data
+      access_key_id: loki
+      secret_access_key: supersecret
+      s3forcepathstyle: true
+  ring:
+    kvstore:
+      store: memberlist
+  compactor_address: http://compactor:3100
+  compactor_grpc_address: compactor:9095
+
+compactor:
+  working_directory: /loki/compactor
+  compaction_interval: 10m
+  retention_enabled: true
+  delete_request_store: s3
+
+querier:
+  max_concurrent: 4
+
+limits_config:
+  retention_period: 744h
+  split_queries_by_interval: 24h
+  max_query_parallelism: 32
+  query_timeout: 5m
+
+ruler:
+  storage:
+    s3:
+      bucketnames: loki-ruler

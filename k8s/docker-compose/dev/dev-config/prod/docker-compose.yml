@@ -56,7 +56,54 @@ services:
     extends:
       file: common-config.yml
       service: network-deploy-service
- 
+
+  query-scheduler:
+    container_name: query-scheduler
+    image: grafana/loki:3.5.5
+    command: "-config.file=/etc/loki/config.yaml -target=query-scheduler -config.expand-env=true"
+    ports:
+      - 3104:3100
+      - 9096:9095
+    volumes:
+      - ../observability/loki/loki-config.yaml:/etc/loki/config.yaml
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      eazybank:
+        aliases:
+          - query-scheduler
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
+  query-frontend:
+    container_name: query-frontend
+    image: grafana/loki:3.5.5
+    command: "-config.file=/etc/loki/config.yaml -target=query-frontend -config.expand-env=true"
+    ports:
+      - 3105:3100
+      - 9097:9095
+    volumes:
+      - ../observability/loki/loki-config.yaml:/etc/loki/config.yaml
+    depends_on:
+      query-scheduler:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      eazybank:
+        aliases:
+          - query-frontend
+    extends:
+      file: common-config.yml
+      service: network-deploy-service
+
   read:
     container_name: read
     image: grafana/loki:3.5.5
@@ -72,7 +119,10 @@ services:
         condition: service_healthy
       compactor:
         condition: service_healthy
-   
+      query-scheduler:
+        condition: service_healthy
+      query-frontend:
+        condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1" ]
       interval: 10s
@@ -208,6 +258,8 @@ services:
       read:
         condition: service_healthy
       write:
+        condition: service_healthy
+      query-frontend:
         condition: service_healthy
     entrypoint:
       - sh
