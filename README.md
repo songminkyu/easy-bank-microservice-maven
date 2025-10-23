@@ -156,7 +156,7 @@ helm install eazybank-prod .k8s/helm/environments/prod-env
 ## 기술 스택
 
 - **언어**: Java 21, Kotlin 2.1
-- **프레임워크**: Spring Boot 3.3, Spring Cloud 2023.0.1
+- **프레임워크**: Spring Boot 3.3.12, Spring Cloud 2023.0.1
 - **빌드 도구**: Maven 3.8.8
 - **데이터베이스**: PostgreSQL
 - **캐싱**: Redis, Redisson
