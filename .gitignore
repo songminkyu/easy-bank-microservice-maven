@@ -156,3 +156,8 @@ Desktop.ini
 ######################
 /coverage/
 /.nyc_output/
+
+######################
+# docker compose
+######################
+.data
