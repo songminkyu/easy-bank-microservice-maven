@@ -14,7 +14,7 @@ services:
   microservice-db-config:
     extends:
       service: network-deploy-service
-    image: suayb/bitnami-debezium-postgresql:15.4.0
+    image: quay.io/debezium/postgres:15
     healthcheck:
       test: pg_isready -U postgres
       timeout: 10s
@@ -22,7 +22,7 @@ services:
       interval: 10s
       start_period: 10s
     environment:
-      POSTGRESQL_PASSWORD: root
+      POSTGRES_PASSWORD: root
 
   microservice-config-server-config:
     extends:
