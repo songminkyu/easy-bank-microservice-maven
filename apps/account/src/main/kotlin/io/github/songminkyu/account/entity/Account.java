@@ -17,7 +17,7 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.envers.Audited;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -28,7 +28,7 @@ import org.hibernate.proxy.HibernateProxy;
     @Index(name = "idx_account_deleted", columnList = "deleted")
 })
 @SQLDelete(sql = "UPDATE account SET deleted = true WHERE account_number=?")
-@Where(clause = "deleted=false")
+@SQLRestriction("deleted=false")
 @Audited
 @Getter
 @Setter
