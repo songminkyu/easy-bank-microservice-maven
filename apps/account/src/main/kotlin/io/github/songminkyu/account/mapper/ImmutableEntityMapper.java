@@ -1,4 +1,4 @@
-package io.github.songmyu.account.mapper;
+package io.github.songminkyu.account.mapper;
 
 import java.util.Collection;
 import java.util.List;
